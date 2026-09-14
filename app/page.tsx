@@ -5,6 +5,7 @@ import { FacultySection } from "@/components/home/FacultySection";
 import { EditorialSection, EDITORIAL_PAGE_SIZE } from "@/components/home/EditorialSection";
 import { SocialFollowWidget } from "@/components/sidebar/SocialFollowWidget";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
+import { CategoriesWidget } from "@/components/sidebar/CategoriesWidget";
 
 export default async function HomePage() {
   const [allPosts, categories, totalPostCount] = await Promise.all([
@@ -21,7 +22,8 @@ export default async function HomePage() {
 
       <div className="max-w-[1550px] mx-auto px-4 sm:px-6 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 space-y-6">
+            <CategoriesWidget categories={categories} />
             <PopularPostsWidget posts={allPosts} />
           </div>
 
@@ -32,7 +34,7 @@ export default async function HomePage() {
 
           <div className="lg:col-span-3 space-y-6">
             <SocialFollowWidget />
-            <SidebarWidgets trendingPosts={trendingPosts} categories={categories} />
+            <SidebarWidgets trendingPosts={trendingPosts} />
           </div>
         </div>
       </div>
