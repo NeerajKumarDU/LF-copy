@@ -131,7 +131,11 @@ export async function findOrCreateCategoryByName(name: string): Promise<{ id: st
 // may collide"). Checking against ALL posts here is stricter than the DB
 // requires, on purpose: two drafts silently sharing a slug is confusing even
 // though Postgres would allow it.
-export async function isSlugTaken(slug: string): Promise<boolean> {
+export async function isSlugTaken(slug: string, excludeId?: string): Promise<boolean> {
+  if (excludeId && !isNaN(Number(excludeId))) {
+    const { rows } = await query(`SELECT 1 FROM posts WHERE slug = $1 AND id <> $2::bigint LIMIT 1`, [slug, excludeId]);
+    return rows.length > 0;
+  }
   const { rows } = await query(`SELECT 1 FROM posts WHERE slug = $1 LIMIT 1`, [slug]);
   return rows.length > 0;
 }
@@ -198,3 +202,171 @@ export async function createPost(opts: {
   ]);
   return { id: String(postId), slug: opts.slug, categorySlug: catRows[0]?.slug ?? "" };
 }
+
+export interface AdminPostDetail {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  status: "published" | "draft" | "private";
+  authorId: string;
+  authorName: string;
+  categories: { name: string; isPrimary: boolean }[];
+  featuredMediaId: string | null;
+  coverImage: string | null;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+export async function getAdminPostById(id: string): Promise<AdminPostDetail | null> {
+  if (!id || isNaN(Number(id))) return null;
+
+  const { rows } = await query<{
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    content: string;
+    status: string;
+    author_id: number | null;
+    author_name: string | null;
+    featured_media_id: number | null;
+    media_path: string | null;
+    meta_cover_image: string | null;
+    published_at: string | null;
+    updated_at: string;
+    primary_category_id: number | null;
+  }>(
+    `SELECT p.id, p.title, p.slug, p.excerpt, p.content, p.status,
+            p.author_id, a.display_name AS author_name,
+            p.featured_media_id, m.path AS media_path,
+            p.meta->>'coverImage' AS meta_cover_image,
+            p.published_at, p.updated_at, p.primary_category_id
+     FROM posts p
+     LEFT JOIN authors a ON a.id = p.author_id
+     LEFT JOIN media m ON m.id = p.featured_media_id
+     WHERE p.id = $1
+     LIMIT 1`,
+    [id]
+  );
+
+  const post = rows[0];
+  if (!post) return null;
+
+  const { rows: catRows } = await query<{
+    name: string;
+    is_primary: boolean;
+  }>(
+    `SELECT c.name,
+            (c.id = $2) AS is_primary
+     FROM categories c
+     WHERE c.id IN (
+       SELECT category_id FROM post_categories WHERE post_id = $1
+       UNION
+       SELECT primary_category_id FROM posts WHERE id = $1 AND primary_category_id IS NOT NULL
+     )
+     ORDER BY (c.id = $2) DESC, c.name ASC`,
+    [id, post.primary_category_id]
+  );
+
+  const categories = catRows.map((r) => ({
+    name: r.name,
+    isPrimary: Boolean(r.is_primary),
+  }));
+
+  if (categories.length > 0 && !categories.some((c) => c.isPrimary)) {
+    categories[0].isPrimary = true;
+  }
+
+  const WP_UPLOADS_BASE = "/wp-content/uploads";
+  const coverImage = post.media_path
+    ? `${WP_UPLOADS_BASE}/${post.media_path.replace(/^\//, "")}`
+    : post.meta_cover_image || null;
+
+  return {
+    id: String(post.id),
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt ?? "",
+    content: post.content,
+    status: post.status as AdminPostDetail["status"],
+    authorId: post.author_id ? String(post.author_id) : "",
+    authorName: post.author_name ?? "Unknown",
+    categories,
+    featuredMediaId: post.featured_media_id ? String(post.featured_media_id) : null,
+    coverImage,
+    publishedAt: post.published_at,
+    updatedAt: post.updated_at,
+  };
+}
+
+export async function updatePost(opts: {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string;
+  status: "published" | "draft" | "private";
+  authorId: string;
+  categoryIds: string[];
+  primaryCategoryId: string;
+  featuredMediaId?: string | null;
+}): Promise<{ id: string; slug: string; categorySlug: string }> {
+  const isPublished = opts.status === "published";
+  const shouldClearMetaCover = opts.featuredMediaId !== undefined;
+
+  const { rows } = await query<{ id: number; slug: string }>(
+    `UPDATE posts
+     SET title = $1,
+         slug = $2,
+         excerpt = $3,
+         content = $4,
+         status = $5::post_status,
+         author_id = $6::bigint,
+         primary_category_id = $7::bigint,
+         featured_media_id = $8::bigint,
+         published_at = ${isPublished ? "COALESCE(published_at, now())" : "published_at"},
+         meta = ${shouldClearMetaCover ? "meta - 'coverImage'" : "meta"},
+         updated_at = now()
+     WHERE id = $9::bigint
+     RETURNING id, slug`,
+    [
+      opts.title,
+      opts.slug,
+      opts.excerpt || null,
+      opts.content,
+      opts.status,
+      opts.authorId,
+      opts.primaryCategoryId,
+      opts.featuredMediaId ?? null,
+      opts.id,
+    ]
+  );
+
+  if (!rows[0]) {
+    throw new Error(`Post with id ${opts.id} not found`);
+  }
+
+  await query(`DELETE FROM post_categories WHERE post_id = $1`, [opts.id]);
+  for (const categoryId of opts.categoryIds) {
+    await query(
+      `INSERT INTO post_categories (post_id, category_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+      [opts.id, categoryId]
+    );
+  }
+
+  const { rows: catRows } = await query<{ slug: string }>(
+    `SELECT slug FROM categories WHERE id = $1`,
+    [opts.primaryCategoryId]
+  );
+
+  return { id: String(rows[0].id), slug: rows[0].slug, categorySlug: catRows[0]?.slug ?? "" };
+}
+
+export async function deletePost(id: string): Promise<boolean> {
+  if (!id || isNaN(Number(id))) return false;
+  const result = await query(`DELETE FROM posts WHERE id = $1::bigint`, [id]);
+  return (result.rowCount ?? 0) > 0;
+}
+
