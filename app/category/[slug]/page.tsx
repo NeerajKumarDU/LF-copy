@@ -96,7 +96,7 @@ export default async function CategoryArchivePage({ params }: { params: { slug: 
               </div>
             ) : (
               <div className="p-8 text-center bg-white rounded-md border border-slate-200">
-                <p className="text-slate-500 font-serif">No placeholder posts in this category yet.</p>
+                <p className="text-slate-500 font-serif">No articles published in this category yet.</p>
               </div>
             )}
           </div>

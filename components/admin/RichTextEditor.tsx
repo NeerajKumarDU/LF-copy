@@ -57,7 +57,7 @@ export function RichTextEditor({ content, onChange }: { content: string; onChang
     editorProps: {
       attributes: {
         class:
-          "min-h-[320px] px-4 py-3 focus:outline-none font-serif text-sm text-slate-800 leading-relaxed " +
+          "min-h-[320px] max-h-[500px] overflow-y-auto px-4 py-3 focus:outline-none font-serif text-sm text-slate-800 leading-relaxed " +
           "[&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 " +
           "[&_h3]:text-lg [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-2 " +
           "[&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 " +
@@ -99,7 +99,7 @@ export function RichTextEditor({ content, onChange }: { content: string; onChang
 
   return (
     <div className="border border-slate-300 rounded-md bg-white overflow-hidden">
-      <div className="flex items-center gap-1 border-b border-slate-200 bg-slate-50 px-2 py-1.5 flex-wrap">
+      <div className="sticky top-0 z-10 flex items-center gap-1 border-b border-slate-200 bg-slate-50 px-2 py-1.5 flex-wrap">
         <ToolbarButton label="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold className="w-4 h-4" />
         </ToolbarButton>

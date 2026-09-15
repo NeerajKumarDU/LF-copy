@@ -79,7 +79,7 @@ export function SidebarWidgets({ trendingPosts, categories }: { trendingPosts: P
           <span className="text-xs font-bold uppercase tracking-wider">The Daily Verdict</span>
         </div>
         <h4 className="font-serif text-sm font-bold text-slate-900">Legal Dispatch Newsletter</h4>
-        <p className="text-xs text-slate-600 mt-1 mb-3">Placeholder — curated case briefs, delivered to your inbox.</p>
+        <p className="text-xs text-slate-600 mt-1 mb-3">Curated case law briefs, exam guides, and legal analysis delivered straight to your inbox.</p>
 
         {subscribed ? (
           <div className="flex items-center space-x-2 text-emerald-700 text-xs font-semibold bg-emerald-100 p-2.5 rounded">

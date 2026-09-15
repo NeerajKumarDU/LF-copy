@@ -7,9 +7,9 @@ import { getCategories } from "@/lib/posts";
 export const metadata: Metadata = {
   title: {
     template: "%s | LawsForum",
-    default: "LawsForum | Legal Digest & Case Law (placeholder)",
+    default: "LawsForum | Legal Digest & Case Law",
   },
-  description: "Placeholder Next.js rebuild of a legal-education magazine site — design/layout review only, no real content yet.",
+  description: "Comprehensive Indian legal education portal, case law digests, judiciary exam preparation, and law notes for students and practitioners.",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

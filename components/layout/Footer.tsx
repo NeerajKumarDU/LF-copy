@@ -19,7 +19,7 @@ export function Footer({ categories }: { categories: Category[] }) {
               <span className="font-serif text-2xl font-extrabold text-white tracking-tight">LAWSFORUM</span>
             </div>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-serif">
-              Placeholder description — legal education, case digests and exam prep for law students and practitioners.
+              Comprehensive legal education, authoritative case law digests, and exam preparation resources for law students, academicians, and legal practitioners across India.
             </p>
           </div>
 
@@ -44,13 +44,13 @@ export function Footer({ categories }: { categories: Category[] }) {
               <span>Disclaimer</span>
             </h4>
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              Placeholder content, intended for academic and informational purposes only. Not legal advice.
+              The materials and articles on this platform are intended for academic and informational purposes only. They do not constitute formal legal advice.
             </p>
           </div>
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} LawsForum. Placeholder footer.</p>
+          <p>© {new Date().getFullYear()} LawsForum. All rights reserved.</p>
           <div className="flex items-center space-x-4">
             <span className="hover:text-slate-400">Privacy Policy</span>
             <span>•</span>
