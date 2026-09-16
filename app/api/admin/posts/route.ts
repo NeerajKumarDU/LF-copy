@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   createPost,
   updatePost,
@@ -69,6 +70,14 @@ export async function POST(req: NextRequest) {
     primaryCategoryId,
     featuredMediaId: featuredMediaId ? String(featuredMediaId) : undefined,
   });
+  revalidatePath("/");
+  revalidatePath("/category/[slug]", "page");
+  revalidatePath("/[...slug]", "page");
+  revalidatePath("/admin");
+  if (post.categorySlug) {
+    revalidatePath(`/category/${post.categorySlug}`);
+    revalidatePath(`/${post.categorySlug}/${post.slug}`);
+  }
   return NextResponse.json({ ok: true, post });
 }
 
@@ -131,6 +140,14 @@ export async function PUT(req: NextRequest) {
       primaryCategoryId,
       featuredMediaId: featuredMediaId === null ? null : featuredMediaId ? String(featuredMediaId) : undefined,
     });
+    revalidatePath("/");
+    revalidatePath("/category/[slug]", "page");
+    revalidatePath("/[...slug]", "page");
+    revalidatePath("/admin");
+    if (post.categorySlug) {
+      revalidatePath(`/category/${post.categorySlug}`);
+      revalidatePath(`/${post.categorySlug}/${post.slug}`);
+    }
     return NextResponse.json({ ok: true, post });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to update article" }, { status: 500 });
@@ -151,6 +168,10 @@ export async function DELETE(req: NextRequest) {
   if (!deleted) {
     return NextResponse.json({ error: "Article not found" }, { status: 404 });
   }
+  revalidatePath("/");
+  revalidatePath("/category/[slug]", "page");
+  revalidatePath("/[...slug]", "page");
+  revalidatePath("/admin");
   return NextResponse.json({ ok: true });
 }
 

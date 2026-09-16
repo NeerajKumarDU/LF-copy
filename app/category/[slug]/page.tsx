@@ -6,10 +6,7 @@ import { Calendar, Eye, FolderOpen, ChevronRight } from "lucide-react";
 import { getCategoryBySlug, getCategories, getPosts } from "@/lib/posts";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
 
-export async function generateStaticParams() {
-  const categories = await getCategories();
-  return categories.map((c) => ({ slug: c.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const category = await getCategoryBySlug(params.slug);

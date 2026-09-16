@@ -91,7 +91,7 @@ const POST_ROW_QUERY = `
     (SELECT count(*) FROM comments cm WHERE cm.post_id = p.id AND cm.approved)::int AS comments_count,
     m.path AS media_path
   FROM posts p
-  JOIN authors a ON a.id = p.author_id
+  LEFT JOIN authors a ON a.id = p.author_id
   JOIN categories c ON c.id = p.primary_category_id
   LEFT JOIN media m ON m.id = p.featured_media_id
   WHERE p.status = 'published'
@@ -108,8 +108,8 @@ type PostRow = {
   view_count: number;
   published_at: string;
   meta: { coverImage?: string };
-  author_id: number;
-  author_name: string;
+  author_id: number | null;
+  author_name: string | null;
   author_avatar: string | null;
   author_bio: string | null;
   category_id: number;
@@ -132,8 +132,8 @@ function mapPost(row: PostRow): Post {
     color: row.category_color ?? "#111827",
   };
   const author: Author = {
-    id: String(row.author_id),
-    name: row.author_name,
+    id: String(row.author_id ?? ""),
+    name: row.author_name ?? "Unknown",
     avatar: row.author_avatar || FALLBACK_AVATAR,
     bio: row.author_bio ?? "",
   };

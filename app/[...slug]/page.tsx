@@ -10,10 +10,7 @@ import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
 
 // Matches the WP permalink /%category%/%postname%/ (plan.md §5.2): the last
 // segment is the post slug, everything before it is the category path.
-export async function generateStaticParams() {
-  const posts = await getPosts();
-  return posts.map((p) => ({ slug: [p.category.slug, p.slug] }));
-}
+export const dynamic = "force-dynamic";
 
 function resolve(segments: string[]) {
   // A real post URL is always /{category...}/{postname} — at least 2 segments.
