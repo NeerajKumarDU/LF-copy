@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Pencil, ExternalLink } from "lucide-react";
 import { getAdminPosts } from "@/lib/admin-posts";
+import { getCurrentSessionUser } from "@/lib/adminAuth";
 import { DeleteArticleButton } from "@/components/admin/DeleteArticleButton";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -9,14 +10,29 @@ const STATUS_STYLES: Record<string, string> = {
   private: "bg-slate-200 text-slate-600",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminArticlesPage({ searchParams }: { searchParams: { page?: string } }) {
   const page = Math.max(1, Number(searchParams.page) || 1);
-  const { posts, totalPages, total } = await getAdminPosts(page);
+  const user = await getCurrentSessionUser();
+  const isAuthor = user?.role === "author";
+  const authorIdFilter = isAuthor ? user?.authorId : undefined;
+
+  const { posts, totalPages, total } = await getAdminPosts(page, authorIdFilter);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="font-serif text-xl font-bold text-slate-900">Articles</h1>
+        <div>
+          <h1 className="font-serif text-xl font-bold text-slate-900">
+            {isAuthor ? "My Articles" : "Articles"}
+          </h1>
+          {isAuthor && (
+            <p className="text-xs text-slate-500 mt-0.5">
+              Articles created by <strong className="text-slate-700">{user?.authorName}</strong>
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-500">{total} total</span>
           <Link
@@ -92,7 +108,7 @@ export default async function AdminArticlesPage({ searchParams }: { searchParams
               {posts.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                    No articles yet.
+                    {isAuthor ? "You haven't created any articles yet." : "No articles yet."}
                   </td>
                 </tr>
               )}

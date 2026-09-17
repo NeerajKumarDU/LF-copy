@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { getCurrentSessionUser } from "@/lib/adminAuth";
 import {
   createPost,
   updatePost,
   deletePost,
+  getAdminPostById,
   isSlugTaken,
   findOrCreateAuthorByName,
   findOrCreateCategoryByName,
@@ -15,10 +17,27 @@ interface CategoryInput {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 
-  const { title, slug, excerpt, content, status, authorName, categories, featuredMediaId } = body;
+  const { title, slug, excerpt, content, status, categories, featuredMediaId } = body;
+  let authorName = body.authorName;
+
+  // Authors can only post under their own name and can only save drafts
+  let finalStatus: "draft" | "published" = status;
+  if (user.role === "author") {
+    if (!user.authorId || !user.authorName) {
+      return NextResponse.json({ error: "Invalid author session" }, { status: 403 });
+    }
+    authorName = user.authorName;
+    finalStatus = "draft";
+  }
+
   if (
     typeof title !== "string" || !title.trim() ||
     typeof slug !== "string" || !slug.trim() ||
@@ -36,19 +55,15 @@ export async function POST(req: NextRequest) {
   if (primaryCats.length !== 1) {
     return NextResponse.json({ error: "Exactly one category must be marked primary" }, { status: 400 });
   }
-  if (status !== "published" && status !== "draft") {
+  if (finalStatus !== "published" && finalStatus !== "draft") {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
-  // Re-check server-side - the client's own check (debounced, best-effort) is
-  // just UX; this is what actually prevents a race between two conflicting saves.
+  // Re-check server-side
   if (await isSlugTaken(slug)) {
     return NextResponse.json({ error: "Slug already in use" }, { status: 409 });
   }
 
-  // Resolve typed names to real rows, creating them if they don't exist yet -
-  // the admin form's author/category fields are writable-with-suggestions,
-  // not a closed dropdown, so either can be a brand-new value.
-  const authorId = await findOrCreateAuthorByName(authorName);
+  const authorId = user.role === "author" ? user.authorId! : await findOrCreateAuthorByName(authorName);
   const resolvedByName = new Map<string, { id: string; slug: string }>();
   for (const c of cats) {
     const key = c.name.trim().toLowerCase();
@@ -64,7 +79,7 @@ export async function POST(req: NextRequest) {
     slug: slug.trim(),
     excerpt: typeof excerpt === "string" ? excerpt.trim() : undefined,
     content,
-    status,
+    status: finalStatus,
     authorId,
     categoryIds,
     primaryCategoryId,
@@ -82,14 +97,36 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 
-  const { id, title, slug, excerpt, content, status, authorName, categories, featuredMediaId } = body;
+  const { id, title, slug, excerpt, content, status, categories, featuredMediaId } = body;
   if (!id || (typeof id !== "string" && typeof id !== "number")) {
     return NextResponse.json({ error: "Post ID is required" }, { status: 400 });
   }
   const postId = String(id);
+
+  const existingPost = await getAdminPostById(postId);
+  if (!existingPost) {
+    return NextResponse.json({ error: "Article not found" }, { status: 404 });
+  }
+
+  let authorName = body.authorName;
+  let finalStatus = status;
+
+  // Authors can only edit their own articles and can only save as drafts
+  if (user.role === "author") {
+    if (!user.authorId || existingPost.authorId !== user.authorId) {
+      return NextResponse.json({ error: "You can only edit your own articles" }, { status: 403 });
+    }
+    authorName = user.authorName;
+    finalStatus = "draft";
+  }
 
   if (
     typeof title !== "string" || !title.trim() ||
@@ -108,7 +145,7 @@ export async function PUT(req: NextRequest) {
   if (primaryCats.length !== 1) {
     return NextResponse.json({ error: "Exactly one category must be marked primary" }, { status: 400 });
   }
-  if (status !== "published" && status !== "draft" && status !== "private") {
+  if (finalStatus !== "published" && finalStatus !== "draft" && finalStatus !== "private") {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
@@ -116,7 +153,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Slug already in use" }, { status: 409 });
   }
 
-  const authorId = await findOrCreateAuthorByName(authorName);
+  const authorId = user.role === "author" ? user.authorId! : await findOrCreateAuthorByName(authorName);
   const resolvedByName = new Map<string, { id: string; slug: string }>();
   for (const c of cats) {
     const key = c.name.trim().toLowerCase();
@@ -134,7 +171,7 @@ export async function PUT(req: NextRequest) {
       slug: slug.trim(),
       excerpt: typeof excerpt === "string" ? excerpt.trim() : undefined,
       content,
-      status,
+      status: finalStatus,
       authorId,
       categoryIds,
       primaryCategoryId,
@@ -155,6 +192,11 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const user = await getCurrentSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let id = req.nextUrl.searchParams.get("id")?.trim();
   if (!id) {
     const body = await req.json().catch(() => null);
@@ -162,6 +204,16 @@ export async function DELETE(req: NextRequest) {
   }
   if (!id) {
     return NextResponse.json({ error: "Missing article ID" }, { status: 400 });
+  }
+
+  if (user.role === "author") {
+    const existingPost = await getAdminPostById(id);
+    if (!existingPost) {
+      return NextResponse.json({ error: "Article not found" }, { status: 404 });
+    }
+    if (existingPost.authorId !== user.authorId) {
+      return NextResponse.json({ error: "You can only delete your own articles" }, { status: 403 });
+    }
   }
 
   const deleted = await deletePost(id);
@@ -174,4 +226,3 @@ export async function DELETE(req: NextRequest) {
   revalidatePath("/admin");
   return NextResponse.json({ ok: true });
 }
-

@@ -36,11 +36,17 @@ export interface ArticleFormProps {
   };
   categories: Category[];
   authors: AdminAuthor[];
+  currentUser?: {
+    role: "admin" | "author";
+    authorId?: string;
+    authorName?: string;
+  };
 }
 
-export function ArticleForm({ initialData, categories, authors }: ArticleFormProps) {
+export function ArticleForm({ initialData, categories, authors, currentUser }: ArticleFormProps) {
   const router = useRouter();
   const isEdit = Boolean(initialData);
+  const isAuthor = currentUser?.role === "author";
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
@@ -56,10 +62,12 @@ export function ArticleForm({ initialData, categories, authors }: ArticleFormPro
       : []
   );
   const [authorName, setAuthorName] = useState(
-    initialData?.authorName || (authors[0]?.name ?? "")
+    isAuthor
+      ? (currentUser?.authorName || initialData?.authorName || "")
+      : (initialData?.authorName || (authors[0]?.name ?? ""))
   );
   const [status, setStatus] = useState<"draft" | "published" | "private">(
-    initialData?.status ?? "draft"
+    isAuthor ? "draft" : (initialData?.status ?? "draft")
   );
 
   const [coverPreview, setCoverPreview] = useState<string | null>(initialData?.coverImage ?? null);
@@ -284,20 +292,37 @@ export function ArticleForm({ initialData, categories, authors }: ArticleFormPro
         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
           Author
         </label>
-        <input
-          type="text"
-          list="author-suggestions"
-          value={authorName}
-          onChange={(e) => setAuthorName(e.target.value)}
-          placeholder="Type or pick an author"
-          required
-          className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-crimson-700"
-        />
-        <datalist id="author-suggestions">
-          {authors.map((a) => (
-            <option key={a.id} value={a.name} />
-          ))}
-        </datalist>
+        {isAuthor ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={authorName}
+              readOnly
+              disabled
+              className="w-full bg-slate-100 border border-slate-300 rounded px-3 py-2 text-sm text-slate-700 cursor-not-allowed font-medium"
+            />
+            <span className="text-xs text-slate-500 whitespace-nowrap bg-slate-200 px-2.5 py-2 rounded font-medium">
+              Your profile
+            </span>
+          </div>
+        ) : (
+          <>
+            <input
+              type="text"
+              list="author-suggestions"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              placeholder="Type or pick an author"
+              required
+              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-crimson-700"
+            />
+            <datalist id="author-suggestions">
+              {authors.map((a) => (
+                <option key={a.id} value={a.name} />
+              ))}
+            </datalist>
+          </>
+        )}
       </div>
 
       <div>
@@ -366,36 +391,47 @@ export function ArticleForm({ initialData, categories, authors }: ArticleFormPro
         <RichTextEditor content={content} onChange={setContent} />
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-        <div className="flex items-center gap-4 text-sm">
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="radio"
-              name="post-status"
-              checked={status === "draft"}
-              onChange={() => setStatus("draft")}
-            />
-            <span>Draft</span>
-          </label>
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="radio"
-              name="post-status"
-              checked={status === "published"}
-              onChange={() => setStatus("published")}
-            />
-            <span>Published</span>
-          </label>
-          {isEdit && initialData?.status === "private" && (
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-200">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-4 text-sm">
             <label className="flex items-center gap-1.5 cursor-pointer">
               <input
                 type="radio"
                 name="post-status"
-                checked={status === "private"}
-                onChange={() => setStatus("private")}
+                checked={status === "draft"}
+                onChange={() => setStatus("draft")}
               />
-              <span>Private</span>
+              <span className="font-semibold text-slate-800">Draft</span>
             </label>
+            {!isAuthor && (
+              <>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="post-status"
+                    checked={status === "published"}
+                    onChange={() => setStatus("published")}
+                  />
+                  <span>Published</span>
+                </label>
+                {isEdit && initialData?.status === "private" && (
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="post-status"
+                      checked={status === "private"}
+                      onChange={() => setStatus("private")}
+                    />
+                    <span>Private</span>
+                  </label>
+                )}
+              </>
+            )}
+          </div>
+          {isAuthor && (
+            <p className="text-xs text-amber-700">
+              Authors can only save drafts. An administrator will review and publish your article.
+            </p>
           )}
         </div>
 
@@ -408,6 +444,10 @@ export function ArticleForm({ initialData, categories, authors }: ArticleFormPro
           >
             {submitting
               ? "Saving…"
+              : isAuthor
+              ? isEdit
+                ? "Update Draft"
+                : "Save Draft"
               : isEdit
               ? "Update Article"
               : status === "published"

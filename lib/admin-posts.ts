@@ -24,8 +24,50 @@ export interface AdminPostRow {
 
 const ADMIN_PAGE_SIZE = 20;
 
-export async function getAdminPosts(page: number): Promise<{ posts: AdminPostRow[]; totalPages: number; total: number }> {
+let hasEnsuredPasswordColumn = false;
+export async function ensureAuthorPasswordColumn(): Promise<void> {
+  if (hasEnsuredPasswordColumn) return;
+  try {
+    await query(`ALTER TABLE authors ADD COLUMN IF NOT EXISTS password_hash text;`);
+    hasEnsuredPasswordColumn = true;
+  } catch (err) {
+    console.error("Failed to ensure password_hash column in authors table:", err);
+  }
+}
+
+export async function getAdminPosts(
+  page: number,
+  authorId?: string
+): Promise<{ posts: AdminPostRow[]; totalPages: number; total: number }> {
   const offset = (Math.max(1, page) - 1) * ADMIN_PAGE_SIZE;
+  const hasAuthorFilter = Boolean(authorId && !isNaN(Number(authorId)));
+
+  const postsQuery = hasAuthorFilter
+    ? `SELECT p.id, p.title, p.slug, p.status,
+              c.name AS category_name, c.slug AS category_slug,
+              a.display_name AS author_name, p.published_at, p.updated_at
+       FROM posts p
+       LEFT JOIN categories c ON c.id = p.primary_category_id
+       LEFT JOIN authors a ON a.id = p.author_id
+       WHERE p.author_id = $3::bigint
+       ORDER BY p.updated_at DESC
+       LIMIT $1 OFFSET $2`
+    : `SELECT p.id, p.title, p.slug, p.status,
+              c.name AS category_name, c.slug AS category_slug,
+              a.display_name AS author_name, p.published_at, p.updated_at
+       FROM posts p
+       LEFT JOIN categories c ON c.id = p.primary_category_id
+       LEFT JOIN authors a ON a.id = p.author_id
+       ORDER BY p.updated_at DESC
+       LIMIT $1 OFFSET $2`;
+
+  const countQuery = hasAuthorFilter
+    ? `SELECT count(*) FROM posts WHERE author_id = $1::bigint`
+    : `SELECT count(*) FROM posts`;
+
+  const countParams = hasAuthorFilter ? [authorId] : [];
+  const postsParams = hasAuthorFilter ? [ADMIN_PAGE_SIZE, offset, authorId] : [ADMIN_PAGE_SIZE, offset];
+
   const [{ rows }, { rows: countRows }] = await Promise.all([
     query<{
       id: number;
@@ -37,18 +79,8 @@ export async function getAdminPosts(page: number): Promise<{ posts: AdminPostRow
       author_name: string | null;
       published_at: string | null;
       updated_at: string;
-    }>(
-      `SELECT p.id, p.title, p.slug, p.status,
-              c.name AS category_name, c.slug AS category_slug,
-              a.display_name AS author_name, p.published_at, p.updated_at
-       FROM posts p
-       LEFT JOIN categories c ON c.id = p.primary_category_id
-       LEFT JOIN authors a ON a.id = p.author_id
-       ORDER BY p.updated_at DESC
-       LIMIT $1 OFFSET $2`,
-      [ADMIN_PAGE_SIZE, offset]
-    ),
-    query<{ count: string }>(`SELECT count(*) FROM posts`),
+    }>(postsQuery, postsParams),
+    query<{ count: string }>(countQuery, countParams),
   ]);
   const total = Number(countRows[0]?.count ?? 0);
   return {
@@ -368,5 +400,98 @@ export async function deletePost(id: string): Promise<boolean> {
   if (!id || isNaN(Number(id))) return false;
   const result = await query(`DELETE FROM posts WHERE id = $1::bigint`, [id]);
   return (result.rowCount ?? 0) > 0;
+}
+
+export interface AuthorWithAuth {
+  id: string;
+  name: string;
+  slug: string;
+  passwordHash: string | null;
+}
+
+export async function getAuthorByName(name: string): Promise<AuthorWithAuth | null> {
+  if (!name || !name.trim()) return null;
+  await ensureAuthorPasswordColumn();
+  const { rows } = await query<{
+    id: number;
+    display_name: string;
+    slug: string;
+    password_hash: string | null;
+  }>(
+    `SELECT id, display_name, slug, password_hash FROM authors WHERE lower(display_name) = lower($1) LIMIT 1`,
+    [name.trim()]
+  );
+  if (!rows[0]) return null;
+  return {
+    id: String(rows[0].id),
+    name: rows[0].display_name,
+    slug: rows[0].slug,
+    passwordHash: rows[0].password_hash,
+  };
+}
+
+export async function getAuthorById(id: string): Promise<AuthorWithAuth | null> {
+  if (!id || isNaN(Number(id))) return null;
+  await ensureAuthorPasswordColumn();
+  const { rows } = await query<{
+    id: number;
+    display_name: string;
+    slug: string;
+    password_hash: string | null;
+  }>(
+    `SELECT id, display_name, slug, password_hash FROM authors WHERE id = $1::bigint LIMIT 1`,
+    [id]
+  );
+  if (!rows[0]) return null;
+  return {
+    id: String(rows[0].id),
+    name: rows[0].display_name,
+    slug: rows[0].slug,
+    passwordHash: rows[0].password_hash,
+  };
+}
+
+export async function setAuthorPassword(authorId: string, passwordHash: string): Promise<boolean> {
+  if (!authorId || isNaN(Number(authorId))) return false;
+  await ensureAuthorPasswordColumn();
+  const result = await query(`UPDATE authors SET password_hash = $1 WHERE id = $2::bigint`, [
+    passwordHash,
+    authorId,
+  ]);
+  return (result.rowCount ?? 0) > 0;
+}
+
+export interface AuthorAuthStatusRow {
+  id: string;
+  name: string;
+  slug: string;
+  hasCustomPassword: boolean;
+  postCount: number;
+}
+
+export async function getAllAuthorsWithAuthStatus(): Promise<AuthorAuthStatusRow[]> {
+  await ensureAuthorPasswordColumn();
+  const { rows } = await query<{
+    id: number;
+    display_name: string;
+    slug: string;
+    has_custom_password: boolean;
+    post_count: string;
+  }>(
+    `SELECT a.id, a.display_name, a.slug,
+            (a.password_hash IS NOT NULL AND a.password_hash <> '') AS has_custom_password,
+            COUNT(p.id) AS post_count
+     FROM authors a
+     LEFT JOIN posts p ON p.author_id = a.id
+     GROUP BY a.id, a.display_name, a.slug, a.password_hash
+     ORDER BY a.display_name ASC`
+  );
+  return rows.map((r) => ({
+    id: String(r.id),
+    name: r.display_name,
+    slug: r.slug,
+    hasCustomPassword: Boolean(r.has_custom_password),
+    postCount: Number(r.post_count || 0),
+  }));
 }
 
