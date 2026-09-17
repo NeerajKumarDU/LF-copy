@@ -3,37 +3,31 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Clock, Eye, Flame, TrendingUp, Calendar, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, Eye, Flame, TrendingUp, Calendar } from "lucide-react";
 import type { Post } from "@/lib/posts";
+import { PaginationNav } from "@/components/ui/PaginationNav";
+import { EDITORIAL_PAGE_SIZE } from "@/lib/pagination";
 
-export const EDITORIAL_PAGE_SIZE = 10;
 const PAGE_SIZE = EDITORIAL_PAGE_SIZE;
 type Tab = "latest" | "hot" | "top";
-
-// Windowed page-number list with ellipsis gaps, e.g. [1, "…", 4, 5, 6, "…", 42] -
-// showing all N pages as buttons stops making sense once N gets into the hundreds.
-function pageWindow(current: number, total: number): (number | "…")[] {
-  const pages: (number | "…")[] = [];
-  const add = (n: number) => pages.push(n);
-  const span = 1; // neighbors shown on each side of current
-
-  add(1);
-  if (current - span > 2) pages.push("…");
-  for (let p = Math.max(2, current - span); p <= Math.min(total - 1, current + span); p++) add(p);
-  if (current + span < total - 1) pages.push("…");
-  if (total > 1) add(total);
-  return pages;
-}
 
 export function EditorialSection({
   initialPosts,
   initialTotalPages,
+  categorySlug,
+  authorSlug,
+  query,
 }: {
   initialPosts: Post[];
   // Omit this on pages passing a pre-filtered list /api/posts can't reproduce
   // (author page's by-author filter, search's by-query filter) - falls back to
   // the original static client-side sort of just that list, no fetch, no pager.
   initialTotalPages?: number;
+  // Same filters getPosts()/the /api/posts route accept - forwarded onto every
+  // page/tab fetch so pagination stays within the filtered set.
+  categorySlug?: string;
+  authorSlug?: string;
+  query?: string;
 }) {
   const paginated = initialTotalPages !== undefined;
   const [activeTab, setActiveTab] = useState<Tab>("latest");
@@ -45,10 +39,18 @@ export function EditorialSection({
   const [totalPages, setTotalPages] = useState(initialTotalPages ?? 1);
   const [loading, setLoading] = useState(false);
 
+  function buildUrl(tab: Tab, pageNum: number) {
+    const params = new URLSearchParams({ sort: tab, page: String(pageNum), limit: String(PAGE_SIZE) });
+    if (categorySlug) params.set("category", categorySlug);
+    if (authorSlug) params.set("author", authorSlug);
+    if (query) params.set("q", query);
+    return `/api/posts?${params.toString()}`;
+  }
+
   async function fetchPage(tab: Tab, pageNum: number) {
     setLoading(true);
     try {
-      const res = await fetch(`/api/posts?sort=${tab}&page=${pageNum}&limit=${PAGE_SIZE}`);
+      const res = await fetch(buildUrl(tab, pageNum));
       const data: { posts: Post[]; page: number; totalPages: number } = await res.json();
       setPosts(data.posts);
       setPage(data.page);
@@ -174,49 +176,7 @@ export function EditorialSection({
         ))}
       </div>
 
-      {paginated && totalPages > 1 && (
-        <nav aria-label="Article pages" className="flex items-center justify-center gap-1.5 mt-8">
-          <button
-            onClick={() => goToPage(page - 1)}
-            disabled={page === 1 || loading}
-            aria-label="Previous page"
-            className="p-2 rounded-md border border-slate-300 text-slate-600 hover:border-crimson-700 hover:text-crimson-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-300 disabled:hover:text-slate-600 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {pageWindow(page, totalPages).map((p, i) =>
-            p === "…" ? (
-              <span key={`gap-${i}`} className="px-2 text-slate-400 text-sm select-none">
-                …
-              </span>
-            ) : (
-              <button
-                key={p}
-                onClick={() => goToPage(p)}
-                disabled={loading}
-                aria-current={p === page ? "page" : undefined}
-                className={`min-w-[2.25rem] h-9 px-2 rounded-md text-xs font-bold transition-colors disabled:cursor-wait ${
-                  p === page
-                    ? "bg-crimson-800 text-white"
-                    : "border border-slate-300 text-slate-700 hover:border-crimson-700 hover:text-crimson-800"
-                }`}
-              >
-                {p}
-              </button>
-            )
-          )}
-
-          <button
-            onClick={() => goToPage(page + 1)}
-            disabled={page === totalPages || loading}
-            aria-label="Next page"
-            className="p-2 rounded-md border border-slate-300 text-slate-600 hover:border-crimson-700 hover:text-crimson-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-300 disabled:hover:text-slate-600 transition-colors"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-          </button>
-        </nav>
-      )}
+      {paginated && <PaginationNav page={page} totalPages={totalPages} loading={loading} onPageChange={goToPage} />}
     </div>
   );
 }

@@ -171,6 +171,8 @@ const ORDER_BY: Record<"latest" | "hot" | "top", string> = {
 
 export async function getPosts(opts?: {
   categorySlug?: string;
+  authorSlug?: string;
+  query?: string;
   limit?: number;
   offset?: number;
   sort?: "latest" | "hot" | "top";
@@ -180,6 +182,14 @@ export async function getPosts(opts?: {
   if (opts?.categorySlug) {
     params.push(opts.categorySlug);
     clauses.push(`c.slug = $${params.length}`);
+  }
+  if (opts?.authorSlug) {
+    params.push(opts.authorSlug);
+    clauses.push(`a.slug = $${params.length}`);
+  }
+  if (opts?.query) {
+    params.push(opts.query);
+    clauses.push(`p.search_tsv @@ plainto_tsquery('english', $${params.length})`);
   }
   let sql = POST_ROW_QUERY;
   if (clauses.length) sql += ` AND ${clauses.join(" AND ")}`;
@@ -198,15 +208,26 @@ export async function getPosts(opts?: {
 
 // Total published-post count for a filter, independent of sort - backs numbered
 // pagination (lib/posts.ts callers need this to compute page counts up front).
-export async function getPostsCount(opts?: { categorySlug?: string }): Promise<number> {
+export async function getPostsCount(opts?: { categorySlug?: string; authorSlug?: string; query?: string }): Promise<number> {
   const clauses: string[] = ["p.status = 'published'"];
   const params: unknown[] = [];
   if (opts?.categorySlug) {
     params.push(opts.categorySlug);
     clauses.push(`c.slug = $${params.length}`);
   }
+  if (opts?.authorSlug) {
+    params.push(opts.authorSlug);
+    clauses.push(`a.slug = $${params.length}`);
+  }
+  if (opts?.query) {
+    params.push(opts.query);
+    clauses.push(`p.search_tsv @@ plainto_tsquery('english', $${params.length})`);
+  }
   const { rows } = await query<{ count: string }>(
-    `SELECT count(*) FROM posts p JOIN categories c ON c.id = p.primary_category_id WHERE ${clauses.join(" AND ")}`,
+    `SELECT count(*) FROM posts p
+     JOIN categories c ON c.id = p.primary_category_id
+     LEFT JOIN authors a ON a.id = p.author_id
+     WHERE ${clauses.join(" AND ")}`,
     params
   );
   return Number(rows[0]?.count ?? 0);
@@ -216,12 +237,6 @@ export async function getPostBySlug(categorySlug: string, slug: string): Promise
   const sql = `${POST_ROW_QUERY} AND c.slug = $1 AND p.slug = $2 LIMIT 1`;
   const { rows } = await query<PostRow>(sql, [categorySlug, slug]);
   return rows[0] ? mapPost(rows[0]) : undefined;
-}
-
-export async function searchPosts(q: string): Promise<Post[]> {
-  const sql = `${POST_ROW_QUERY} AND p.search_tsv @@ plainto_tsquery('english', $1) ORDER BY p.published_at DESC`;
-  const { rows } = await query<PostRow>(sql, [q]);
-  return rows.map(mapPost);
 }
 
 export async function getCategories(): Promise<Category[]> {

@@ -2,17 +2,24 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-import { getAuthorBySlug, getPosts, getCategories } from "@/lib/posts";
+import { getAuthorBySlug, getPosts, getPostsCount, getCategories } from "@/lib/posts";
 import { EditorialSection } from "@/components/home/EditorialSection";
+import { EDITORIAL_PAGE_SIZE } from "@/lib/pagination";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
+
+export const dynamic = "force-dynamic";
 
 export default async function AuthorPage({ params }: { params: { slug: string } }) {
   const author = await getAuthorBySlug(params.slug);
   if (!author) notFound();
 
-  const allPosts = await getPosts();
-  const authorPosts = allPosts.filter((p) => p.author.id === author.id);
-  const categories = await getCategories();
+  const [authorPosts, authorPostCount, allPosts, categories] = await Promise.all([
+    getPosts({ authorSlug: params.slug, limit: EDITORIAL_PAGE_SIZE }),
+    getPostsCount({ authorSlug: params.slug }),
+    getPosts({ limit: 10 }),
+    getCategories(),
+  ]);
+  const initialTotalPages = Math.max(1, Math.ceil(authorPostCount / EDITORIAL_PAGE_SIZE));
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);
 
   return (
@@ -35,7 +42,7 @@ export default async function AuthorPage({ params }: { params: { slug: string } 
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            <EditorialSection initialPosts={authorPosts} />
+            <EditorialSection initialPosts={authorPosts} initialTotalPages={initialTotalPages} authorSlug={params.slug} />
           </div>
           <div className="lg:col-span-4">
             <SidebarWidgets trendingPosts={trendingPosts} categories={categories} />

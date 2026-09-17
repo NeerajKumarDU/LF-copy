@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Pencil, ExternalLink } from "lucide-react";
+import { Pencil, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { getAdminPosts } from "@/lib/admin-posts";
 import { getCurrentSessionUser } from "@/lib/adminAuth";
 import { DeleteArticleButton } from "@/components/admin/DeleteArticleButton";
+import { pageWindow } from "@/components/ui/PaginationNav";
 
 const STATUS_STYLES: Record<string, string> = {
   published: "bg-emerald-100 text-emerald-700",
@@ -118,24 +119,50 @@ export default async function AdminArticlesPage({ searchParams }: { searchParams
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-4 text-sm">
-          <Link
-            href={`/admin?page=${page - 1}`}
-            aria-disabled={page <= 1}
-            className={`px-3 py-1.5 rounded border border-slate-300 ${page <= 1 ? "pointer-events-none opacity-40" : "hover:border-crimson-700 hover:text-crimson-800"}`}
-          >
-            Prev
-          </Link>
-          <span className="text-slate-500">
+        <div className="flex flex-col items-center gap-2 mt-4">
+          <nav aria-label="Article pages" className="flex items-center justify-center gap-1.5">
+            <Link
+              href={`/admin?page=${page - 1}`}
+              aria-disabled={page <= 1}
+              aria-label="Previous page"
+              className={`p-2 rounded-md border border-slate-300 text-slate-600 ${page <= 1 ? "pointer-events-none opacity-40" : "hover:border-crimson-700 hover:text-crimson-800"}`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Link>
+
+            {pageWindow(page, totalPages).map((p, i) =>
+              p === "…" ? (
+                <span key={`gap-${i}`} className="px-2 text-slate-400 text-sm select-none">
+                  …
+                </span>
+              ) : (
+                <Link
+                  key={p}
+                  href={`/admin?page=${p}`}
+                  aria-current={p === page ? "page" : undefined}
+                  className={`min-w-[2.25rem] h-9 px-2 rounded-md text-xs font-bold flex items-center justify-center transition-colors ${
+                    p === page
+                      ? "bg-crimson-800 text-white"
+                      : "border border-slate-300 text-slate-700 hover:border-crimson-700 hover:text-crimson-800"
+                  }`}
+                >
+                  {p}
+                </Link>
+              )
+            )}
+
+            <Link
+              href={`/admin?page=${page + 1}`}
+              aria-disabled={page >= totalPages}
+              aria-label="Next page"
+              className={`p-2 rounded-md border border-slate-300 text-slate-600 ${page >= totalPages ? "pointer-events-none opacity-40" : "hover:border-crimson-700 hover:text-crimson-800"}`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </nav>
+          <span className="text-[11px] text-slate-400 font-mono">
             Page {page} of {totalPages}
           </span>
-          <Link
-            href={`/admin?page=${page + 1}`}
-            aria-disabled={page >= totalPages}
-            className={`px-3 py-1.5 rounded border border-slate-300 ${page >= totalPages ? "pointer-events-none opacity-40" : "hover:border-crimson-700 hover:text-crimson-800"}`}
-          >
-            Next
-          </Link>
         </div>
       )}
     </div>

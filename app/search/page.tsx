@@ -1,15 +1,20 @@
 import { Search as SearchIcon } from "lucide-react";
-import { getPosts, getCategories, searchPosts } from "@/lib/posts";
+import { getPosts, getPostsCount, getCategories } from "@/lib/posts";
 import { EditorialSection } from "@/components/home/EditorialSection";
+import { EDITORIAL_PAGE_SIZE } from "@/lib/pagination";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
+
+export const dynamic = "force-dynamic";
 
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
   const q = (searchParams.q ?? "").trim();
-  const [results, allPosts, categories] = await Promise.all([
-    q ? searchPosts(q) : Promise.resolve([]),
+  const [results, resultCount, allPosts, categories] = await Promise.all([
+    q ? getPosts({ query: q, limit: EDITORIAL_PAGE_SIZE }) : Promise.resolve([]),
+    q ? getPostsCount({ query: q }) : Promise.resolve(0),
     getPosts({ limit: 10 }),
     getCategories(),
   ]);
+  const initialTotalPages = Math.max(1, Math.ceil(resultCount / EDITORIAL_PAGE_SIZE));
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);
 
   return (
@@ -29,7 +34,9 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
                 <p className="text-slate-500 font-serif">No results found.</p>
               </div>
             )}
-            {results.length > 0 && <EditorialSection initialPosts={results} />}
+            {results.length > 0 && (
+              <EditorialSection initialPosts={results} initialTotalPages={initialTotalPages} query={q} />
+            )}
           </div>
           <div className="lg:col-span-4">
             <SidebarWidgets trendingPosts={trendingPosts} categories={categories} />

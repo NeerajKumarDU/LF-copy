@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
-import { Calendar, Eye, FolderOpen, ChevronRight } from "lucide-react";
-import { getCategoryBySlug, getCategories, getPosts } from "@/lib/posts";
+import { FolderOpen, ChevronRight } from "lucide-react";
+import { getCategoryBySlug, getCategories, getPosts, getPostsCount } from "@/lib/posts";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
+import { CategoryPostGrid } from "@/components/category/CategoryPostGrid";
+import { CATEGORY_PAGE_SIZE } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,13 @@ export default async function CategoryArchivePage({ params }: { params: { slug: 
   const category = await getCategoryBySlug(params.slug);
   if (!category) notFound();
 
-  const [categoryPosts, allPosts, categories] = await Promise.all([
-    getPosts({ categorySlug: params.slug }),
+  const [categoryPosts, categoryPostCount, allPosts, categories] = await Promise.all([
+    getPosts({ categorySlug: params.slug, limit: CATEGORY_PAGE_SIZE }),
+    getPostsCount({ categorySlug: params.slug }),
     getPosts({ limit: 10 }),
     getCategories(),
   ]);
+  const initialTotalPages = Math.max(1, Math.ceil(categoryPostCount / CATEGORY_PAGE_SIZE));
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);
 
   return (
@@ -43,7 +46,7 @@ export default async function CategoryArchivePage({ params }: { params: { slug: 
             <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-white">{category.name}</h1>
             {category.description && <p className="text-slate-300 text-sm sm:text-base mt-3 leading-relaxed font-serif">{category.description}</p>}
             <div className="mt-4 text-xs font-mono text-slate-400">
-              Posts: <span className="text-white font-bold">{categoryPosts.length}</span>
+              Posts: <span className="text-white font-bold">{categoryPostCount}</span>
             </div>
           </div>
           <div className="absolute top-0 right-0 w-96 h-96 opacity-10 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: category.color }} />
@@ -51,51 +54,7 @@ export default async function CategoryArchivePage({ params }: { params: { slug: 
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            {categoryPosts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {categoryPosts.map((post) => (
-                  <article key={post.id} className="group bg-white rounded-md border border-slate-200 overflow-hidden shadow-sm hover:shadow-md hover:border-crimson-700/40 transition-all flex flex-col justify-between">
-                    <div>
-                      <div className="relative w-full h-48 bg-slate-900 overflow-hidden">
-                        <Image src={post.coverImage} alt={post.title} fill sizes="(max-width: 640px) 100vw, 380px" className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                        <span className="absolute top-2 left-2 bg-crimson-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow">
-                          {post.category.name}
-                        </span>
-                      </div>
-
-                      <div className="p-4 sm:p-5">
-                        <div className="flex items-center space-x-2 text-[11px] text-slate-500 mb-2">
-                          <Calendar className="w-3 h-3" />
-                          <span>{new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</span>
-                          <span>•</span>
-                          <span>{post.readTimeMin} min read</span>
-                        </div>
-
-                        <Link href={`/${post.category.slug}/${post.slug}`}>
-                          <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 group-hover:text-crimson-800 leading-snug line-clamp-2 transition-colors">
-                            {post.title}
-                          </h2>
-                        </Link>
-
-                        <p className="text-slate-600 text-xs mt-2 line-clamp-2 leading-relaxed">{post.excerpt}</p>
-                      </div>
-                    </div>
-
-                    <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 mt-2 flex items-center justify-between text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700 truncate max-w-[150px]">{post.author.name}</span>
-                      <span className="flex items-center space-x-1">
-                        <Eye className="w-3 h-3" />
-                        <span>{post.viewCount.toLocaleString("en-US")}</span>
-                      </span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center bg-white rounded-md border border-slate-200">
-                <p className="text-slate-500 font-serif">No articles published in this category yet.</p>
-              </div>
-            )}
+            <CategoryPostGrid categorySlug={params.slug} initialPosts={categoryPosts} initialTotalPages={initialTotalPages} />
           </div>
 
           <div className="lg:col-span-4">

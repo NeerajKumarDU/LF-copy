@@ -25,12 +25,15 @@ function createPool() {
     // Hosted providers (Neon, Supabase, etc.) sit behind TLS; local dev Postgres
     // doesn't. Skip strict CA checks for the hosted case.
     ssl: isLocal ? undefined : { rejectUnauthorized: false },
-  });
-  // Neon (unlike stock Postgres/local dev) hands new connections an EMPTY
-  // search_path by default, so unqualified table names 404 even though the
-  // tables exist. Force it on every physical connection the pool opens.
-  pool.on("connect", (client) => {
-    client.query("SET search_path TO public").catch(() => {});
+    // Neon (unlike stock Postgres/local dev) hands new connections an EMPTY
+    // search_path by default, so unqualified table names 404 even though the
+    // tables exist. Set via the Postgres startup 'options' param, not a
+    // post-connect client.query() — the latter races any query a caller fires
+    // on that same client immediately after it's handed out of the pool
+    // (surfaces as "client.query() when already executing" + corrupted
+    // results once enough requests run their queries concurrently, e.g. a
+    // page's Promise.all).
+    options: "-c search_path=public",
   });
   return pool;
 }
