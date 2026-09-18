@@ -6,6 +6,7 @@ import { Clock, Eye, Calendar, ChevronRight, Tag as TagIcon, MessageSquare, Scal
 import DOMPurify from "isomorphic-dompurify";
 import { getPostBySlug, getPosts, getCategories } from "@/lib/posts";
 import { ShareButtons } from "@/components/post/ShareButtons";
+import { ViewTracker } from "@/components/post/ViewTracker";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
 
 // Matches the WP permalink /%category%/%postname%/ (plan.md §5.2): the last
@@ -47,6 +48,8 @@ export default async function PostDetailPage({ params }: { params: { slug: strin
           <ChevronRight className="w-3.5 h-3.5" />
           <span className="truncate max-w-xs sm:max-w-md text-slate-700 font-medium">{post.title}</span>
         </nav>
+
+        <ViewTracker postId={post.id} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
           <article className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-md border border-slate-200 shadow-sm">

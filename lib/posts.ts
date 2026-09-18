@@ -264,6 +264,15 @@ export async function getCategoryBySlug(slug: string): Promise<Category | undefi
   return categories.find((c) => c.slug === slug);
 }
 
+// Client dedupes repeat views itself (localStorage) before ever calling this -
+// server just trusts the increment. Scoped to published posts so drafts/private
+// posts (never publicly viewable) can't be prodded via a guessed id.
+export async function incrementPostViewCount(id: string): Promise<boolean> {
+  if (!id || isNaN(Number(id))) return false;
+  const result = await query(`UPDATE posts SET view_count = view_count + 1 WHERE id = $1::bigint AND status = 'published'`, [id]);
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function getAuthorBySlug(slug: string): Promise<Author | undefined> {
   const { rows } = await query<{ id: number; slug: string; display_name: string; avatar_url: string | null; bio: string | null }>(
     `SELECT id, slug, display_name, avatar_url, bio FROM authors WHERE slug = $1 LIMIT 1`,
