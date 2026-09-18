@@ -12,6 +12,12 @@ export const metadata: Metadata = {
     default: "LawsForum | Legal Digest & Case Law",
   },
   description: "Comprehensive Indian legal education portal, case law digests, judiciary exam preparation, and law notes for students and practitioners.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+    ],
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
