@@ -3,7 +3,7 @@ import { Pencil, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { getAdminPosts } from "@/lib/admin-posts";
 import { getCurrentSessionUser } from "@/lib/adminAuth";
 import { DeleteArticleButton } from "@/components/admin/DeleteArticleButton";
-import { pageWindow } from "@/components/ui/PaginationNav";
+import { pageWindow } from "@/lib/pageWindow";
 
 const STATUS_STYLES: Record<string, string> = {
   published: "bg-emerald-100 text-emerald-700",
