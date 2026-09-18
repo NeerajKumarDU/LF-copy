@@ -66,9 +66,7 @@ export function ArticleForm({ initialData, categories, authors, currentUser }: A
       ? (currentUser?.authorName || initialData?.authorName || "")
       : (initialData?.authorName || (authors[0]?.name ?? ""))
   );
-  const [status, setStatus] = useState<"draft" | "published" | "private">(
-    isAuthor ? "draft" : (initialData?.status ?? "draft")
-  );
+  const [status, setStatus] = useState<"draft" | "published" | "private">(initialData?.status ?? "draft");
 
   const [coverPreview, setCoverPreview] = useState<string | null>(initialData?.coverImage ?? null);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(initialData?.featuredMediaId ?? null);
@@ -403,35 +401,29 @@ export function ArticleForm({ initialData, categories, authors, currentUser }: A
               />
               <span className="font-semibold text-slate-800">Draft</span>
             </label>
-            {!isAuthor && (
-              <>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="post-status"
-                    checked={status === "published"}
-                    onChange={() => setStatus("published")}
-                  />
-                  <span>Published</span>
-                </label>
-                {isEdit && initialData?.status === "private" && (
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="post-status"
-                      checked={status === "private"}
-                      onChange={() => setStatus("private")}
-                    />
-                    <span>Private</span>
-                  </label>
-                )}
-              </>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio"
+                name="post-status"
+                checked={status === "published"}
+                onChange={() => setStatus("published")}
+              />
+              <span>Published</span>
+            </label>
+            {!isAuthor && isEdit && initialData?.status === "private" && (
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="post-status"
+                  checked={status === "private"}
+                  onChange={() => setStatus("private")}
+                />
+                <span>Private</span>
+              </label>
             )}
           </div>
-          {isAuthor && (
-            <p className="text-xs text-amber-700">
-              Authors can only save drafts. An administrator will review and publish your article.
-            </p>
+          {isEdit && initialData?.status === "published" && status === "draft" && (
+            <p className="text-xs text-amber-700">This will take the article off the live site.</p>
           )}
         </div>
 
@@ -444,14 +436,12 @@ export function ArticleForm({ initialData, categories, authors, currentUser }: A
           >
             {submitting
               ? "Saving…"
-              : isAuthor
-              ? isEdit
-                ? "Update Draft"
-                : "Save Draft"
-              : isEdit
+              : status === "private"
               ? "Update Article"
               : status === "published"
               ? "Publish"
+              : isEdit && initialData?.status === "published"
+              ? "Unpublish"
               : "Save Draft"}
           </button>
         </div>

@@ -59,13 +59,14 @@ export async function PUT(
   let authorName = body.authorName;
   let finalStatus = status;
 
-  // Authors can only edit their own articles and can only save as drafts
+  // Authors can only edit their own articles, and can only choose draft/published
+  // (not private - that stays admin-only).
   if (user.role === "author") {
     if (!user.authorId || existingPost.authorId !== user.authorId) {
       return NextResponse.json({ error: "You can only edit your own articles" }, { status: 403 });
     }
     authorName = user.authorName;
-    finalStatus = "draft";
+    finalStatus = status === "published" ? "published" : "draft";
   }
 
   if (

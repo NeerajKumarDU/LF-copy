@@ -28,14 +28,15 @@ export async function POST(req: NextRequest) {
   const { title, slug, excerpt, content, status, categories, featuredMediaId } = body;
   let authorName = body.authorName;
 
-  // Authors can only post under their own name and can only save drafts
+  // Authors can only post under their own name, and can only choose
+  // draft/published (not private - that stays admin-only).
   let finalStatus: "draft" | "published" = status;
   if (user.role === "author") {
     if (!user.authorId || !user.authorName) {
       return NextResponse.json({ error: "Invalid author session" }, { status: 403 });
     }
     authorName = user.authorName;
-    finalStatus = "draft";
+    finalStatus = status === "published" ? "published" : "draft";
   }
 
   if (
@@ -119,13 +120,14 @@ export async function PUT(req: NextRequest) {
   let authorName = body.authorName;
   let finalStatus = status;
 
-  // Authors can only edit their own articles and can only save as drafts
+  // Authors can only edit their own articles, and can only choose draft/published
+  // (not private - that stays admin-only).
   if (user.role === "author") {
     if (!user.authorId || existingPost.authorId !== user.authorId) {
       return NextResponse.json({ error: "You can only edit your own articles" }, { status: 403 });
     }
     authorName = user.authorName;
-    finalStatus = "draft";
+    finalStatus = status === "published" ? "published" : "draft";
   }
 
   if (
