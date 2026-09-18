@@ -95,7 +95,7 @@ export default async function PostDetailPage({ params }: { params: { slug: strin
             </div>
 
             <div className="relative w-full h-72 sm:h-96 rounded-md overflow-hidden mb-6 bg-slate-900">
-              <Image src={post.coverImage} alt={post.title} fill priority sizes="(max-width: 1024px) 100vw, 800px" className="object-cover" />
+              <Image src={post.coverImage} alt={post.title} fill priority sizes="(max-width: 1024px) 100vw, 800px" className="object-contain" />
             </div>
 
             {/* Real content is Gutenberg-cleaned HTML from etl.py, not markdown — render it as
@@ -139,7 +139,7 @@ export default async function PostDetailPage({ params }: { params: { slug: strin
                   {relatedPosts.map((rel) => (
                     <Link key={rel.id} href={`/${rel.category.slug}/${rel.slug}`} className="group block bg-slate-50 p-3 rounded border border-slate-200 hover:border-crimson-700/50 transition-all">
                       <div className="relative w-full h-28 rounded overflow-hidden mb-2 bg-slate-900">
-                        <Image src={rel.coverImage} alt={rel.title} fill sizes="(max-width: 640px) 100vw, 250px" className="object-cover group-hover:scale-105 transition-transform" />
+                        <Image src={rel.coverImage} alt={rel.title} fill sizes="(max-width: 640px) 100vw, 250px" className="object-contain group-hover:scale-105 transition-transform" />
                       </div>
                       <h4 className="font-serif text-xs font-bold text-slate-900 group-hover:text-crimson-800 line-clamp-2 leading-snug">{rel.title}</h4>
                       <span className="text-[11px] text-slate-400 mt-1 block">{rel.readTimeMin} min read</span>

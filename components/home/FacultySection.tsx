@@ -35,7 +35,7 @@ export function FacultySection({ posts }: { posts: Post[] }) {
         <div className="bg-neutral-100 border border-neutral-200 p-4 sm:p-5">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
             <div className="md:col-span-6 relative h-48 sm:h-56 bg-neutral-200 overflow-hidden">
-              <Image src={mainPost.coverImage} alt={mainPost.title} fill sizes="(max-width: 768px) 100vw, 300px" className="object-cover" />
+              <Image src={mainPost.coverImage} alt={mainPost.title} fill sizes="(max-width: 768px) 100vw, 300px" className="object-contain" />
             </div>
 
             <div className="md:col-span-6 flex flex-col justify-between">

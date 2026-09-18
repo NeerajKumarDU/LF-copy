@@ -128,7 +128,7 @@ export function EditorialSection({
           <article key={post.id} className="group bg-white p-4 sm:p-5 rounded-md border border-slate-200 shadow-sm hover:shadow-md hover:border-crimson-700/40 transition-all">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
               <div className="relative w-full sm:w-56 h-44 flex-shrink-0 overflow-hidden rounded bg-slate-100">
-                <Image src={post.coverImage} alt={post.title} fill sizes="(max-width: 640px) 100vw, 224px" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                <Image src={post.coverImage} alt={post.title} fill sizes="(max-width: 640px) 100vw, 224px" className="object-contain group-hover:scale-105 transition-transform duration-300" />
                 <span className="absolute top-2 left-2 bg-crimson-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">
                   {post.category.name}
                 </span>

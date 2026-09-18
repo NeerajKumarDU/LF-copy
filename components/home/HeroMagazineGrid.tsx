@@ -17,7 +17,7 @@ export function HeroMagazineGrid({ posts }: { posts: Post[] }) {
         alt={post.title}
         fill
         sizes="(max-width: 768px) 100vw, 25vw"
-        className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-75"
+        className="object-contain group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-75"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
       <div className="relative z-10 p-3 sm:p-4">
@@ -46,7 +46,7 @@ export function HeroMagazineGrid({ posts }: { posts: Post[] }) {
               fill
               priority
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover object-center group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-85"
+              className="object-contain object-center group-hover:scale-105 transition-transform duration-700 opacity-95 group-hover:opacity-85"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent pointer-events-none" />
 

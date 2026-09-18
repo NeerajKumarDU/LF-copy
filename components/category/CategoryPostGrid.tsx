@@ -70,7 +70,7 @@ export function CategoryPostGrid({
                   alt={post.title}
                   fill
                   sizes="(max-width: 640px) 100vw, 380px"
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="object-contain group-hover:scale-105 transition-transform duration-300"
                 />
                 <span className="absolute top-2 left-2 bg-crimson-800 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded shadow">
                   {post.category.name}

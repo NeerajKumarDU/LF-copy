@@ -19,7 +19,7 @@ export function PopularPostsWidget({ posts }: { posts: Post[] }) {
               href={`/${post.category.slug}/${post.slug}`}
               className="relative w-20 h-16 flex-shrink-0 bg-neutral-200 overflow-hidden flex items-center justify-center border border-neutral-200"
             >
-              <Image src={post.coverImage} alt={post.title} fill sizes="80px" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+              <Image src={post.coverImage} alt={post.title} fill sizes="80px" className="object-contain group-hover:scale-105 transition-transform duration-300" />
             </Link>
 
             <div className="flex-1">
