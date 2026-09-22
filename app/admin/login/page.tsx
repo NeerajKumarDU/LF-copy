@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Scale, UserPen, Shield } from "lucide-react";
 
 function LoginForm() {
@@ -136,6 +137,13 @@ function LoginForm() {
           {loading ? "Checking…" : role === "author" ? "Log In as Author" : "Log In as Admin"}
         </button>
       </form>
+
+      <p className="text-center text-xs text-slate-400">
+        Want to write for us?{" "}
+        <Link href="/become-author" className="text-crimson-800 font-semibold hover:underline">
+          Request author access
+        </Link>
+      </p>
     </div>
   );
 }

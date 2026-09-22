@@ -137,6 +137,21 @@ export async function findOrCreateAuthorByName(name: string): Promise<string> {
   return String(inserted[0].id);
 }
 
+// Backs approved author-signup requests (lib/author-requests.ts). Unlike
+// findOrCreateAuthorByName, this always inserts a fresh row rather than
+// attaching to an existing same-named author - approving a request should
+// never silently give someone else's byline to a new account.
+export async function createAuthorAccount(name: string, passwordHash: string): Promise<{ id: string; name: string }> {
+  const trimmed = name.trim();
+  const slug = await uniqueSlug("authors", slugify(trimmed));
+  const wpId = -Date.now();
+  const { rows } = await query<{ id: number }>(
+    `INSERT INTO authors (wp_id, slug, display_name, password_hash) VALUES ($1, $2, $3, $4) RETURNING id`,
+    [wpId, slug, trimmed, passwordHash]
+  );
+  return { id: String(rows[0].id), name: trimmed };
+}
+
 // Same idea for categories, plus a default pill color since color has no
 // WP source (schema.appext.sql - app-owned, editorial choice).
 const NEW_CATEGORY_COLOR = "#111827";

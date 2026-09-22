@@ -3,11 +3,13 @@ import { Scale, Shield, UserPen } from "lucide-react";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { getCurrentSessionUser } from "@/lib/adminAuth";
+import { listPendingAuthorRequests } from "@/lib/author-requests";
 
 export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentSessionUser();
   const isAdmin = user?.role === "admin";
   const isAuthor = user?.role === "author";
+  const pendingRequestCount = isAdmin ? (await listPendingAuthorRequests()).length : 0;
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
@@ -60,6 +62,19 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
             className="py-3 text-sm font-bold text-slate-700 hover:text-crimson-800 border-b-2 border-transparent hover:border-crimson-700 transition-colors"
           >
             Authors & Passwords
+          </Link>
+        )}
+        {isAdmin && (
+          <Link
+            href="/admin/author-requests"
+            className="py-3 text-sm font-bold text-slate-700 hover:text-crimson-800 border-b-2 border-transparent hover:border-crimson-700 transition-colors inline-flex items-center gap-1.5"
+          >
+            <span>Author Requests</span>
+            {pendingRequestCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 text-[11px] font-bold text-white bg-crimson-700 rounded-full">
+                {pendingRequestCount}
+              </span>
+            )}
           </Link>
         )}
       </nav>
