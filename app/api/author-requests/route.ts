@@ -20,7 +20,17 @@ export async function POST(req: NextRequest) {
   }
 
   const { token } = await createAuthorRequest({ name, email, message });
-  const verifyUrl = `${req.nextUrl.origin}/become-author/verify?token=${token}`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "lawsforum.com";
+  // if (!siteUrl) {
+  //   console.error("NEXT_PUBLIC_SITE_URL is not configured");
+  //   return NextResponse.json(
+  //     { error: "Server configuration error" },
+  //     { status: 500 }
+  //   );
+  // }
+
+  const verifyUrl = `${siteUrl.replace(/\/$/, "")}/become-author/verify?token=${encodeURIComponent(token)}`;
+
 
   try {
     await sendMail({
