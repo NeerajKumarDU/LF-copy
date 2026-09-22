@@ -15,7 +15,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: "Request not found or already decided" }, { status: 404 });
   }
 
-  const loginUrl = `${req.nextUrl.origin}/admin/login`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "lawsforum.com";
+  // if (!siteUrl) {
+  //   console.error("NEXT_PUBLIC_SITE_URL is not configured");
+  //   return NextResponse.json(
+  //     { error: "Server configuration error" },
+  //     { status: 500 }
+  //   );
+  // }
+
+  const loginUrl = `${siteUrl.replace(/\/$/, "")}/become-author/verify?token=${encodeURIComponent(token)}`;
+
   try {
     await sendMail({
       to: result.email,
