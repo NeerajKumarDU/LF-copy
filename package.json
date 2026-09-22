@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
+    "migrate": "tsx scripts/migrate.ts",
     "list-media": "tsx scripts/list-media-paths.ts",
     "list-unreferenced": "tsx scripts/list-unreferenced.ts",
     "delete-unreferenced": "tsx scripts/delete-unreferenced.ts"
