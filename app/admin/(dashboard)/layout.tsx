@@ -13,13 +13,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
-      <header className="bg-slate-950 text-white px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-crimson-800 text-white flex items-center justify-center">
-            <Scale className="w-4 h-4" />
-          </div>
-          <span className="font-serif font-bold text-base">LawsForum Admin</span>
-        </div>
+      <header className="bg-slate-950 text-white px-6 py-3.5 flex items-center justify-end">
 
         <div className="flex items-center gap-3">
           {isAuthor && (
@@ -39,7 +33,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
             </span>
           )}
 
-          <LogoutButton />
+          <LogoutButton redirectTo={isAuthor ? "/author/login" : "/admin/login"} />
         </div>
       </header>
 

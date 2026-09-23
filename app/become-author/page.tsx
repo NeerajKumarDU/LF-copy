@@ -24,7 +24,7 @@ export default function BecomeAuthorPage() {
 
         <p className="text-center text-xs text-slate-400">
           Already have an account?{" "}
-          <Link href="/admin/login" className="text-crimson-800 font-semibold hover:underline">
+          <Link href="/author/login" className="text-crimson-800 font-semibold hover:underline">
             Log in
           </Link>
         </p>

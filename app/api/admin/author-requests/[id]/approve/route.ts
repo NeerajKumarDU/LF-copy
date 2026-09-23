@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   //   );
   // }
 
-  const loginUrl = `${siteUrl.replace(/\/$/, "")}/admin/login`;
+  const loginUrl = `${siteUrl.replace(/\/$/, "")}/author/login`;
 
   try {
     await sendMail({

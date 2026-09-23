@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { TrendingUp, FolderOpen, Mail, CheckCircle2 } from "lucide-react";
 import type { Post, Category } from "@/lib/posts";
+import { AuthorAccessWidget } from "./AuthorAccessWidget";
 
 export function SidebarWidgets({ trendingPosts, categories }: { trendingPosts: Post[]; categories?: Category[] }) {
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -102,6 +103,8 @@ export function SidebarWidgets({ trendingPosts, categories }: { trendingPosts: P
           </form>
         )}
       </div>
+
+      <AuthorAccessWidget />
     </aside>
   );
 }

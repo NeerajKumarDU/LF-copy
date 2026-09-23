@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Scale } from "lucide-react";
+import Link from "next/link";
 
-function LoginForm() {
+export function AuthorLoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const [authorName, setAuthorName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ function LoginForm() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "admin", password }),
+        body: JSON.stringify({ role: "author", authorName: authorName.trim(), password }),
       });
       const data = await res.json().catch(() => ({}));
       setLoading(false);
@@ -38,15 +39,23 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-sm bg-white rounded-md p-8 shadow-xl space-y-5">
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-8 h-8 rounded bg-crimson-800 text-white flex items-center justify-center">
-          <Scale className="w-5 h-5" />
-        </div>
-        <span className="font-serif text-lg font-extrabold text-slate-900">LawsForum</span>
-      </div>
-
+    <>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+            Author Name
+          </label>
+          <input
+            type="text"
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            placeholder="e.g. John Doe"
+            autoFocus
+            required
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-crimson-700"
+          />
+        </div>
+
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
             Password
@@ -55,12 +64,14 @@ function LoginForm() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Admin Password"
-            autoFocus
             required
             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-crimson-700"
           />
         </div>
+
+        <p className="text-[11px] text-slate-400">
+          First time in? Use the password we sent you when your request was approved - you can change it once you&apos;re in.
+        </p>
 
         {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded p-2">{error}</p>}
 
@@ -72,16 +83,13 @@ function LoginForm() {
           {loading ? "Checking…" : "Log In"}
         </button>
       </form>
-    </div>
-  );
-}
 
-export default function AdminLoginPage() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
-      <Suspense fallback={null}>
-        <LoginForm />
-      </Suspense>
-    </div>
+      <p className="text-center text-xs text-slate-400 mt-5">
+        Not registered yet?{" "}
+        <Link href="/become-author" className="text-crimson-800 font-semibold hover:underline">
+          Request author access
+        </Link>
+      </p>
+    </>
   );
 }

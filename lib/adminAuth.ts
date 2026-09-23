@@ -130,6 +130,31 @@ export async function isValidSessionToken(token: string | undefined | null): Pro
   return user !== null;
 }
 
+// Signature-only check (expiry ignored) - grants nothing, just tells
+// middleware which login page to bounce an expired session back to
+// (/admin/login vs /author/login), since /admin/(dashboard) is shared by
+// both roles and a truly-expired token otherwise carries no readable role.
+export async function peekSessionRole(token: string | undefined | null): Promise<SessionRole | null> {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [dataPart, sigHex] = parts;
+  if (!dataPart || !sigHex) return null;
+
+  try {
+    const key = await hmacKey();
+    const expectedSig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(dataPart));
+    if (toHex(expectedSig) !== sigHex) return null;
+    if (/^\d+$/.test(dataPart)) return "admin";
+
+    const payload = JSON.parse(base64UrlToUtf8(dataPart));
+    if (payload?.role === "admin" || payload?.role === "author") return payload.role;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // Server Component / Route Handler helper to get current session user
 export async function getCurrentSessionUser(): Promise<SessionUser | null> {
   try {

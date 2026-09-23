@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isValidSessionToken, ADMIN_COOKIE_NAME } from "@/lib/adminAuth";
+import { isValidSessionToken, peekSessionRole, ADMIN_COOKIE_NAME } from "@/lib/adminAuth";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -17,7 +17,11 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith("/api/admin")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const loginUrl = new URL("/admin/login", req.url);
+  // /admin/(dashboard) is shared by both roles - an expired-but-otherwise-valid
+  // token still tells us which login page to send them back to, so an
+  // author's lapsed session doesn't get bounced at the admin-only login.
+  const role = await peekSessionRole(token);
+  const loginUrl = new URL(role === "author" ? "/author/login" : "/admin/login", req.url);
   loginUrl.searchParams.set("next", pathname);
   return NextResponse.redirect(loginUrl);
 }
