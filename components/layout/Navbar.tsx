@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Search, Menu, X, Scale } from "lucide-react";
+import { ChevronDown, Search, Menu, X, Scale, LogIn } from "lucide-react";
 import type { Category } from "@/lib/posts";
 
 interface DropdownItem { title: string; href: string }
@@ -138,6 +138,14 @@ export function Navbar({ categories }: { categories: Category[] }) {
         </nav>
 
         <div className="flex items-center space-x-2">
+          <Link
+            href="/author/login"
+            className="hidden xl:inline-flex items-center gap-1.5 h-[46px] px-4 border border-neutral-300 hover:border-neutral-900 text-neutral-900 text-xs font-bold uppercase tracking-wider transition-colors"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Log In</span>
+          </Link>
+
           <button
             onClick={() => setSearchOpen(!searchOpen)}
             className="w-[46px] h-[46px] bg-[#2E489E] hover:bg-[#233a82] text-white flex items-center justify-center transition-colors rounded-none shadow-sm"
@@ -240,6 +248,15 @@ export function Navbar({ categories }: { categories: Category[] }) {
               )}
             </div>
           )}
+
+          <Link
+            href="/author/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-1.5 text-sm font-bold text-neutral-900 hover:text-blue-700 py-2"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Log In</span>
+          </Link>
         </div>
       )}
     </div>

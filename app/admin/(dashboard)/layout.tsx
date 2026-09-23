@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Scale, Shield, UserPen } from "lucide-react";
+import { Shield, UserPen } from "lucide-react";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { ChangePasswordModal } from "@/components/admin/ChangePasswordModal";
 import { getCurrentSessionUser } from "@/lib/adminAuth";
