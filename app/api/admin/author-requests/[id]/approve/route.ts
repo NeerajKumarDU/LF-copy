@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   //   );
   // }
 
-  const loginUrl = `${siteUrl.replace(/\/$/, "")}/become-author/verify?token=${encodeURIComponent(token)}`;
+  const loginUrl = `${siteUrl.replace(/\/$/, "")}/admin/login`;
 
   try {
     await sendMail({
