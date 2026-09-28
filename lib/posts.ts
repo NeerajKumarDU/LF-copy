@@ -181,7 +181,18 @@ export async function getPosts(opts?: {
   const params: unknown[] = [];
   if (opts?.categorySlug) {
     params.push(opts.categorySlug);
-    clauses.push(`c.slug = $${params.length}`);
+    clauses.push(`(
+      c.slug = $${params.length}
+      OR EXISTS (
+        SELECT 1 FROM post_categories pc
+        JOIN categories c2 ON c2.id = pc.category_id
+        WHERE pc.post_id = p.id AND c2.slug = $${params.length}
+      )
+      OR EXISTS (
+        SELECT 1 FROM categories parent
+        WHERE parent.slug = $${params.length} AND c.parent_id = parent.id
+      )
+    )`);
   }
   if (opts?.authorSlug) {
     params.push(opts.authorSlug);
@@ -213,7 +224,18 @@ export async function getPostsCount(opts?: { categorySlug?: string; authorSlug?:
   const params: unknown[] = [];
   if (opts?.categorySlug) {
     params.push(opts.categorySlug);
-    clauses.push(`c.slug = $${params.length}`);
+    clauses.push(`(
+      c.slug = $${params.length}
+      OR EXISTS (
+        SELECT 1 FROM post_categories pc
+        JOIN categories c2 ON c2.id = pc.category_id
+        WHERE pc.post_id = p.id AND c2.slug = $${params.length}
+      )
+      OR EXISTS (
+        SELECT 1 FROM categories parent
+        WHERE parent.slug = $${params.length} AND c.parent_id = parent.id
+      )
+    )`);
   }
   if (opts?.authorSlug) {
     params.push(opts.authorSlug);
@@ -224,7 +246,7 @@ export async function getPostsCount(opts?: { categorySlug?: string; authorSlug?:
     clauses.push(`p.search_tsv @@ plainto_tsquery('english', $${params.length})`);
   }
   const { rows } = await query<{ count: string }>(
-    `SELECT count(*) FROM posts p
+    `SELECT count(DISTINCT p.id) FROM posts p
      JOIN categories c ON c.id = p.primary_category_id
      LEFT JOIN authors a ON a.id = p.author_id
      WHERE ${clauses.join(" AND ")}`,
@@ -243,10 +265,18 @@ export async function getCategories(): Promise<Category[]> {
   const { rows } = await query<{
     id: number; name: string; slug: string; description: string | null; color: string | null; post_count: string;
   }>(`
-    SELECT c.id, c.name, c.slug, c.description, c.color, count(p.id)::text AS post_count
+    SELECT c.id, c.name, c.slug, c.description, c.color,
+      (
+        SELECT count(DISTINCT p.id)
+        FROM posts p
+        LEFT JOIN post_categories pc ON pc.post_id = p.id
+        WHERE p.status = 'published' AND (
+          p.primary_category_id = c.id
+          OR pc.category_id = c.id
+          OR p.primary_category_id IN (SELECT child.id FROM categories child WHERE child.parent_id = c.id)
+        )
+      )::text AS post_count
     FROM categories c
-    LEFT JOIN posts p ON p.primary_category_id = c.id AND p.status = 'published'
-    GROUP BY c.id
     ORDER BY c.name
   `);
   return rows.map((r) => ({
