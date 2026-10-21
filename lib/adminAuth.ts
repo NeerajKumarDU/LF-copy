@@ -130,6 +130,18 @@ export async function isValidSessionToken(token: string | undefined | null): Pro
   return user !== null;
 }
 
+// Re-signs a fresh token for an already-validated user, with the TTL reset to
+// the full 7 days from now. Middleware calls this on every authenticated
+// request so an active session keeps "sliding" forward instead of hitting a
+// hard cutoff 7 days after login, regardless of how often the author/admin
+// comes back.
+export async function renewSessionToken(user: SessionUser): Promise<string> {
+  if (user.role === "author") {
+    return createAuthorSessionToken({ id: user.authorId ?? "", name: user.authorName ?? "" });
+  }
+  return createAdminSessionToken();
+}
+
 // Signature-only check (expiry ignored) - grants nothing, just tells
 // middleware which login page to bounce an expired session back to
 // (/admin/login vs /author/login), since /admin/(dashboard) is shared by

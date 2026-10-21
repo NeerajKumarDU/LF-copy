@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, X, Loader2, CheckCircle2 } from "lucide-react";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export function AdminResetPasswordModal({
   authorId,
@@ -122,14 +123,13 @@ export function AdminResetPasswordModal({
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     New Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={setNewPassword}
                     required
                     autoFocus
                     placeholder="Enter new password"
-                    className="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-crimson-700"
+                    className="py-1.5"
                   />
                 </div>
 
@@ -137,13 +137,12 @@ export function AdminResetPasswordModal({
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Confirm New Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={setConfirmPassword}
                     required
                     placeholder="Repeat new password"
-                    className="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-crimson-700"
+                    className="py-1.5"
                   />
                 </div>
 

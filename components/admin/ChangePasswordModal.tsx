@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KeyRound, X, Loader2, CheckCircle2 } from "lucide-react";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export function ChangePasswordModal() {
   const [open, setOpen] = useState(false);
@@ -112,14 +113,13 @@ export function ChangePasswordModal() {
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Current Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    onChange={setCurrentPassword}
                     required
                     autoFocus
                     placeholder="Enter current password"
-                    className="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-crimson-700"
+                    className="py-1.5"
                   />
                 </div>
 
@@ -127,13 +127,12 @@ export function ChangePasswordModal() {
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     New Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={setNewPassword}
                     required
                     placeholder="At least 4 characters"
-                    className="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-crimson-700"
+                    className="py-1.5"
                   />
                 </div>
 
@@ -141,13 +140,12 @@ export function ChangePasswordModal() {
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Confirm New Password
                   </label>
-                  <input
-                    type="password"
+                  <PasswordInput
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={setConfirmPassword}
                     required
                     placeholder="Repeat new password"
-                    className="w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-crimson-700"
+                    className="py-1.5"
                   />
                 </div>
 

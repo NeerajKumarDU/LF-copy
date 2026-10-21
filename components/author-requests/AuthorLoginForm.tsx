@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export function AuthorLoginForm() {
   const router = useRouter();
@@ -60,13 +61,7 @@ export function AuthorLoginForm() {
           <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
             Password
           </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-crimson-700"
-          />
+          <PasswordInput value={password} onChange={setPassword} required className="py-2" />
         </div>
 
         <p className="text-[11px] text-slate-400">

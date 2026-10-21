@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isValidSessionToken, peekSessionRole, ADMIN_COOKIE_NAME } from "@/lib/adminAuth";
+import {
+  getSessionUser,
+  renewSessionToken,
+  peekSessionRole,
+  ADMIN_COOKIE_NAME,
+  ADMIN_COOKIE_MAX_AGE_SECONDS,
+} from "@/lib/adminAuth";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -10,8 +16,21 @@ export async function middleware(req: NextRequest) {
   }
 
   const token = req.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  if (await isValidSessionToken(token)) {
-    return NextResponse.next();
+  const user = await getSessionUser(token);
+  if (user) {
+    // Sliding session: every authenticated request re-signs the token with a
+    // fresh 7-day expiry, so staying active keeps you logged in indefinitely
+    // instead of getting cut off exactly 7 days after the original login.
+    const res = NextResponse.next();
+    const renewed = await renewSessionToken(user);
+    res.cookies.set(ADMIN_COOKIE_NAME, renewed, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: ADMIN_COOKIE_MAX_AGE_SECONDS,
+      path: "/",
+    });
+    return res;
   }
 
   if (pathname.startsWith("/api/admin")) {
