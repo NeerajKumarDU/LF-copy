@@ -77,7 +77,7 @@ export default async function PostDetailPage({ params }: { params: { slug: strin
               <div className="flex items-center space-x-4">
                 <span className="flex items-center space-x-1">
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>{new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</span>
+                  <span>{new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" })}</span>
                 </span>
                 <span className="flex items-center space-x-1">
                   <Clock className="w-3.5 h-3.5" />

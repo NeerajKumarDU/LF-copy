@@ -46,7 +46,7 @@ export default async function AuthorRequestsPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">
                     {r.verifiedAt
-                      ? new Date(r.verifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })
+                      ? new Date(r.verifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" })
                       : "—"}
                   </td>
                   <td className="px-4 py-3">

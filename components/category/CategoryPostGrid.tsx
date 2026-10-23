@@ -85,7 +85,7 @@ export function CategoryPostGrid({
                       month: "long",
                       day: "numeric",
                       year: "numeric",
-                      timeZone: "UTC",
+                      timeZone: "Asia/Kolkata",
                     })}
                   </span>
                   <span>•</span>

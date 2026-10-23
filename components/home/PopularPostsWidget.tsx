@@ -32,7 +32,7 @@ export function PopularPostsWidget({ posts }: { posts: Post[] }) {
               <div className="flex items-center space-x-2 mt-1 text-[11px] text-neutral-500 font-sans">
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3 h-3 text-neutral-400" />
-                  <span>{new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</span>
+                  <span>{new Date(post.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" })}</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center space-x-1">

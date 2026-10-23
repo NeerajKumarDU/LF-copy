@@ -56,7 +56,7 @@ export function FacultySection({ posts }: { posts: Post[] }) {
               <div className="flex items-center space-x-3 text-[11px] text-neutral-500 mt-4 pt-2 border-t border-neutral-200">
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3 h-3" />
-                  <span>{new Date(mainPost.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</span>
+                  <span>{new Date(mainPost.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" })}</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center space-x-1">

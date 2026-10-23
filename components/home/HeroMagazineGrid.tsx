@@ -69,7 +69,7 @@ export function HeroMagazineGrid({ posts }: { posts: Post[] }) {
               <div className="flex items-center space-x-3 mt-3 text-xs text-neutral-300 font-sans">
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>{new Date(centerFeatured.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}</span>
+                  <span>{new Date(centerFeatured.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" })}</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center space-x-1">
