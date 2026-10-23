@@ -1,10 +1,24 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { PenLine } from "lucide-react";
 import { AuthorLoginForm } from "@/components/author-requests/AuthorLoginForm";
+import { getCurrentSessionUser } from "@/lib/adminAuth";
 
 export const metadata = { title: "Author Login" };
 
-export default function AuthorLoginPage() {
+export default async function AuthorLoginPage({
+  searchParams,
+}: {
+  searchParams: { next?: string };
+}) {
+  // Already signed in as an author - skip the form. Only same-site paths are
+  // honoured for `next` so this can't be used as an open redirect.
+  const user = await getCurrentSessionUser();
+  if (user?.role === "author") {
+    const next = searchParams.next;
+    redirect(next && next.startsWith("/") && !next.startsWith("//") ? next : "/admin");
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-sm bg-white rounded-md p-8 shadow-xl space-y-5">
