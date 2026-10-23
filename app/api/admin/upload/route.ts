@@ -49,7 +49,13 @@ export async function POST(req: NextRequest) {
   // break the animation, not worth it for cover images.
   if (ext !== "gif") {
     try {
-      const pipeline = sharp(bytes)
+      const pipeline = sharp(bytes, { limitInputPixels: false })
+        // sharp's default ~268MP decompression-bomb guard rejects legitimate
+        // high-DPI scans/photos; disabling it here is safe since we cap MAX_BYTES
+        // above and immediately downscale below. Without this, oversized originals
+        // silently fall through to the catch below and get stored unresized - which
+        // then also fails next/image's own sharp call at render time (same default
+        // limit), so the cover image never displays at all.
         .rotate() // bake in EXIF orientation before resizing, then drop the tag
         .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true });
       bytes =
