@@ -7,10 +7,10 @@ import { query } from "./db";
 
 // Images stay at the original WP path (plan.md §6: "preserved exactly", zero rewriting).
 // media.path is relative ('2017/11/foo.jpg'); this is the one place the base is assembled.
-// Path-only, no host: prod serves this via nginx alias on the same domain (§6), and
-// dev serves it from public/wp-content/uploads/ (rsync'd copy) — both same-origin, no
-// remotePatterns entry needed either way.
-const WP_UPLOADS_BASE = "/wp-content/uploads";
+// Absolute in prod so next/image fetches through the nginx alias (§6): `next start` only
+// scans public/ at boot, so a same-origin path 404s inside the optimizer for anything
+// uploaded after the last restart. Dev re-scans public/, so a plain path works there.
+const WP_UPLOADS_BASE = `${process.env.NODE_ENV === "production" ? "https://lawsforum.com" : ""}/wp-content/uploads`;
 const FALLBACK_COVER = "/placeholder-cover.svg";
 // Most real (ETL'd) authors have no avatar_url — WordPress never had one to
 // import. `<Image src="">` (empty string) throws at runtime, so fall back to

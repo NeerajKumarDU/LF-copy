@@ -33,8 +33,9 @@ export async function POST(req: NextRequest) {
   const safeName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const relPath = `admin/${safeName}`;
   // Writes into the app's own public/ dir, same convention as the WP media
-  // dump (WP_UPLOADS_BASE in lib/posts.ts) so the existing coverImage render
-  // path needs zero changes. Works in local dev and on the eventual
+  // dump (WP_UPLOADS_BASE in lib/posts.ts). `next start` won't see this file until
+  // its next restart, so prod covers must reach it through nginx (see that constant).
+  // Works in local dev and on the eventual
   // self-hosted VPS (plan.md's real target) - NOT on Vercel, whose serverless
   // filesystem is read-only outside /tmp. Revisit if this admin panel needs
   // to go live before the VPS cutover happens.
