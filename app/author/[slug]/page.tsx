@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-import { getAuthorBySlug, getPosts, getPostsCount, getCategories } from "@/lib/posts";
+import { getAuthorBySlug, getPosts, getPostsCount, getPublicCategories } from "@/lib/posts";
 import { EditorialSection } from "@/components/home/EditorialSection";
 import { EDITORIAL_PAGE_SIZE } from "@/lib/pagination";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
@@ -17,7 +17,7 @@ export default async function AuthorPage({ params }: { params: { slug: string } 
     getPosts({ authorSlug: params.slug, limit: EDITORIAL_PAGE_SIZE }),
     getPostsCount({ authorSlug: params.slug }),
     getPosts({ limit: 10 }),
-    getCategories(),
+    getPublicCategories(),
   ]);
   const initialTotalPages = Math.max(1, Math.ceil(authorPostCount / EDITORIAL_PAGE_SIZE));
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);

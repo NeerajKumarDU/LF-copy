@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { getCategories } from "@/lib/posts";
+import { getPublicCategories } from "@/lib/posts";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const categories = await getCategories();
+  const categories = await getPublicCategories();
   return (
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col justify-between bg-editorial-bg font-sans">

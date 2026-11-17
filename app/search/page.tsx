@@ -1,5 +1,5 @@
 import { Search as SearchIcon } from "lucide-react";
-import { getPosts, getPostsCount, getCategories } from "@/lib/posts";
+import { getPosts, getPostsCount, getPublicCategories } from "@/lib/posts";
 import { EditorialSection } from "@/components/home/EditorialSection";
 import { EDITORIAL_PAGE_SIZE } from "@/lib/pagination";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
@@ -12,7 +12,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
     q ? getPosts({ query: q, limit: EDITORIAL_PAGE_SIZE }) : Promise.resolve([]),
     q ? getPostsCount({ query: q }) : Promise.resolve(0),
     getPosts({ limit: 10 }),
-    getCategories(),
+    getPublicCategories(),
   ]);
   const initialTotalPages = Math.max(1, Math.ceil(resultCount / EDITORIAL_PAGE_SIZE));
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);

@@ -1,10 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Clock, Eye, Calendar, ChevronRight, Tag as TagIcon, MessageSquare, Scale } from "lucide-react";
 import DOMPurify from "isomorphic-dompurify";
-import { getPostBySlug, getPosts, getCategories } from "@/lib/posts";
+import { getPostBySlug, getPosts, getPublicCategories, getCategoryRedirect } from "@/lib/posts";
+import { encodeSlugPath } from "@/lib/slugify";
 import { ShareButtons } from "@/components/post/ShareButtons";
 import { ViewTracker } from "@/components/post/ViewTracker";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
@@ -31,10 +32,17 @@ export async function generateMetadata({ params }: { params: { slug: string[] } 
 
 export default async function PostDetailPage({ params }: { params: { slug: string[] } }) {
   const post = await resolve(params.slug);
-  if (!post) notFound();
+  if (!post) {
+    // Post under a merged-away category slug: send to the survivor's URL.
+    if (params.slug.length >= 2) {
+      const target = await getCategoryRedirect(params.slug.slice(0, -1).join("/"));
+      if (target) permanentRedirect(`/${encodeSlugPath(target)}/${encodeSlugPath(params.slug[params.slug.length - 1])}`);
+    }
+    notFound();
+  }
 
   const allPosts = await getPosts({ limit: 10 });
-  const categories = await getCategories();
+  const categories = await getPublicCategories();
   const relatedPosts = allPosts.filter((p) => p.slug !== post.slug && p.category.slug === post.category.slug).slice(0, 3);
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);
 

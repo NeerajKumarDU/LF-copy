@@ -289,9 +289,32 @@ export async function getCategories(): Promise<Category[]> {
   }));
 }
 
+// Public nav/sidebar/footer lists: empty categories would only lead to blank
+// archive pages. Admin pickers still use getCategories() for the full list.
+export async function getPublicCategories(): Promise<Category[]> {
+  const categories = await getCategories();
+  return categories.filter((c) => (c.postCount ?? 0) > 0);
+}
+
 export async function getCategoryBySlug(slug: string): Promise<Category | undefined> {
   const categories = await getCategories();
   return categories.find((c) => c.slug === slug);
+}
+
+// Slugs of categories merged away (migrations/004) -> survivor's current slug,
+// so old /category/{slug} and /{slug}/{post} URLs can 301 instead of 404.
+export async function getCategoryRedirect(oldSlug: string): Promise<string | undefined> {
+  try {
+    const { rows } = await query<{ slug: string }>(
+      `SELECT c.slug FROM category_redirects r JOIN categories c ON c.id = r.category_id WHERE r.old_slug = $1 LIMIT 1`,
+      [oldSlug]
+    );
+    return rows[0]?.slug;
+  } catch (err) {
+    // Table not created yet (migration 004 not run) - plain 404, not a 500.
+    if ((err as { code?: string }).code === "42P01") return undefined;
+    throw err;
+  }
 }
 
 // Client dedupes repeat views itself (localStorage) before ever calling this -

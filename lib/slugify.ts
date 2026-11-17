@@ -9,3 +9,15 @@ export function slugify(input: string): string {
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+// Redirect Location headers must be ASCII. WP-imported slugs (e.g. Hindi) may be
+// stored raw or already percent-encoded, so decode first to avoid double-encoding.
+export function encodeSlugPath(slug: string): string {
+  let decoded = slug;
+  try {
+    decoded = decodeURIComponent(slug);
+  } catch {
+    // stray '%' - treat as raw text
+  }
+  return encodeURIComponent(decoded);
+}

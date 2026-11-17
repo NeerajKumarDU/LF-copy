@@ -1,4 +1,4 @@
-import { getPosts, getPostsCount, getCategories } from "@/lib/posts";
+import { getPosts, getPostsCount, getPublicCategories } from "@/lib/posts";
 import { HeroMagazineGrid } from "@/components/home/HeroMagazineGrid";
 import { PopularPostsWidget } from "@/components/home/PopularPostsWidget";
 import { FacultySection } from "@/components/home/FacultySection";
@@ -11,7 +11,7 @@ import { CategoriesWidget } from "@/components/sidebar/CategoriesWidget";
 export default async function HomePage() {
   const [allPosts, categories, totalPostCount] = await Promise.all([
     getPosts({ limit: 30 }),
-    getCategories(),
+    getPublicCategories(),
     getPostsCount(),
   ]);
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);

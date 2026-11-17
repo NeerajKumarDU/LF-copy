@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { FolderOpen, ChevronRight } from "lucide-react";
-import { getCategoryBySlug, getCategories, getPosts, getPostsCount } from "@/lib/posts";
+import { getCategoryBySlug, getCategoryRedirect, getPublicCategories, getPosts, getPostsCount } from "@/lib/posts";
+import { encodeSlugPath } from "@/lib/slugify";
 import { SidebarWidgets } from "@/components/sidebar/SidebarWidgets";
 import { CategoryPostGrid } from "@/components/category/CategoryPostGrid";
 import { CATEGORY_PAGE_SIZE } from "@/lib/pagination";
@@ -12,18 +13,27 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const category = await getCategoryBySlug(params.slug);
   if (!category) return { title: "Category Not Found" };
-  return { title: `${category.name} Archives`, description: category.description };
+  return {
+    title: `${category.name} Archives`,
+    description: category.description,
+    // Empty archive = thin page; keep it reachable but out of search results.
+    ...(category.postCount ? {} : { robots: { index: false, follow: true } }),
+  };
 }
 
 export default async function CategoryArchivePage({ params }: { params: { slug: string } }) {
   const category = await getCategoryBySlug(params.slug);
-  if (!category) notFound();
+  if (!category) {
+    const target = await getCategoryRedirect(params.slug);
+    if (target) permanentRedirect(`/category/${encodeSlugPath(target)}`);
+    notFound();
+  }
 
   const [categoryPosts, categoryPostCount, allPosts, categories] = await Promise.all([
     getPosts({ categorySlug: params.slug, limit: CATEGORY_PAGE_SIZE }),
     getPostsCount({ categorySlug: params.slug }),
     getPosts({ limit: 10 }),
-    getCategories(),
+    getPublicCategories(),
   ]);
   const initialTotalPages = Math.max(1, Math.ceil(categoryPostCount / CATEGORY_PAGE_SIZE));
   const trendingPosts = [...allPosts].sort((a, b) => b.hotScore - a.hotScore);
