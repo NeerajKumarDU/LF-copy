@@ -39,7 +39,8 @@ export function HeroMagazineGrid({ posts }: { posts: Post[] }) {
             <SideCard post={bottomLeft} />
           </div>
 
-          <div className="md:col-span-6 relative group overflow-hidden bg-neutral-950 min-h-[380px] md:min-h-full flex flex-col justify-end">
+          {/* Mobile: featured first, then the two left cards; right column hidden (3 total). */}
+          <div className="order-first md:order-none md:col-span-6 relative group overflow-hidden bg-neutral-950 min-h-[380px] md:min-h-full flex flex-col justify-end">
             <Image
               src={centerFeatured.coverImage}
               alt={centerFeatured.title}
@@ -85,7 +86,7 @@ export function HeroMagazineGrid({ posts }: { posts: Post[] }) {
             </div>
           </div>
 
-          <div className="md:col-span-3 grid grid-rows-2 gap-1 h-full">
+          <div className="hidden md:grid md:col-span-3 grid-rows-2 gap-1 h-full">
             <SideCard post={topRight} />
             <SideCard post={bottomRight} />
           </div>
