@@ -122,6 +122,21 @@ type PostRow = {
   media_path: string | null;
 };
 
+// WP display names come in as "vijay samant" / "VIJAY SAMANT". Title-case words
+// that are all-lower or all-upper; leave deliberate mixed case ("McDonald") and
+// scripts without case (Hindi) untouched.
+export function formatPersonName(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) =>
+      w === w.toLowerCase() || w === w.toUpperCase()
+        ? w.toLowerCase().replace(/(^|[-'.])(\p{L})/gu, (_, sep: string, ch: string) => sep + ch.toUpperCase())
+        : w
+    )
+    .join(" ");
+}
+
 function mapPost(row: PostRow): Post {
   const publishedAt = new Date(row.published_at).toISOString();
   const category: Category = {
@@ -133,7 +148,7 @@ function mapPost(row: PostRow): Post {
   };
   const author: Author = {
     id: String(row.author_id ?? ""),
-    name: row.author_name ?? "Unknown",
+    name: row.author_name ? formatPersonName(row.author_name) : "Unknown",
     avatar: row.author_avatar || FALLBACK_AVATAR,
     bio: row.author_bio ?? "",
   };
@@ -333,5 +348,5 @@ export async function getAuthorBySlug(slug: string): Promise<Author | undefined>
   );
   const row = rows[0];
   if (!row) return undefined;
-  return { id: String(row.id), name: row.display_name, avatar: row.avatar_url || FALLBACK_AVATAR, bio: row.bio ?? "" };
+  return { id: String(row.id), name: formatPersonName(row.display_name), avatar: row.avatar_url || FALLBACK_AVATAR, bio: row.bio ?? "" };
 }

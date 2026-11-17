@@ -30,7 +30,7 @@ export function SidebarWidgets({ trendingPosts, categories }: { trendingPosts: P
           {top5Trending.map((post, idx) => (
             <div key={post.id} className="flex items-start space-x-3 group">
               <span className={`font-serif text-2xl font-black leading-none flex-shrink-0 w-6 text-center ${idx === 0 ? "text-crimson-800" : idx === 1 ? "text-amber-600" : "text-slate-300"}`}>
-                0{idx + 1}
+                {idx + 1}
               </span>
               <div className="flex-1">
                 <Link href={`/${post.category.slug}/${post.slug}`} className="font-serif text-xs sm:text-sm font-bold text-slate-900 group-hover:text-crimson-800 leading-snug line-clamp-2 transition-colors">

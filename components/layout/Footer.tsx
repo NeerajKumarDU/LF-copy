@@ -52,9 +52,14 @@ export function Footer({ categories }: { categories: Category[] }) {
         <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} LawsForum. All rights reserved.</p>
           <div className="flex items-center space-x-4">
-            <span className="hover:text-slate-400">Privacy Policy</span>
+            <Link href="/about" className="hover:text-slate-300 transition-colors">About</Link>
             <span>•</span>
-            <span className="hover:text-slate-400">Terms of Service</span>
+            <Link href="/contact" className="hover:text-slate-300 transition-colors">Contact</Link>
+            <span>•</span>
+            {/* No policy pages yet - plain text, so no hover/link affordance */}
+            <span className="cursor-default select-none">Privacy Policy</span>
+            <span>•</span>
+            <span className="cursor-default select-none">Terms of Service</span>
           </div>
           {/* moved from TopBar (removed) — keeps these links site-wide instead of home-sidebar-only */}
           <div className="flex items-center space-x-3 text-slate-500">

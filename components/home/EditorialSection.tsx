@@ -167,7 +167,7 @@ export function EditorialSection({
                   </div>
 
                   <Link href={`/${post.category.slug}/${post.slug}`} className="text-crimson-800 font-semibold hover:underline text-xs flex items-center gap-0.5">
-                    Read Full Opinion &rarr;
+                    Read Article &rarr;
                   </Link>
                 </div>
               </div>
